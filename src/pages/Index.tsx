@@ -4,7 +4,7 @@ import { Navigate } from 'react-router-dom';
 import { StatsCard } from "@/components/StatsCard";
 import { WeeklySchedule } from "@/components/WeeklySchedule";
 import { Button } from "@/components/ui/button";
-import { Dumbbell, Calendar, Trophy, TrendingUp, User, LogOut } from "lucide-react";
+import { Dumbbell, Calendar, Trophy, TrendingUp, User, LogOut, Settings } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Index = () => {
@@ -42,6 +42,12 @@ const Index = () => {
             </div>
             
             <div className="flex items-center space-x-4">
+              <Link to="/workouts">
+                <Button variant="outline" className="border-gray-700 text-gray-300 hover:bg-gray-800">
+                  <Settings className="w-4 h-4 mr-2" />
+                  Treinos
+                </Button>
+              </Link>
               <Link to="/profile">
                 <Button variant="outline" className="border-gray-700 text-gray-300 hover:bg-gray-800">
                   <User className="w-4 h-4 mr-2" />

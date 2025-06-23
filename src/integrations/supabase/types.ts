@@ -9,6 +9,56 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      exercises: {
+        Row: {
+          created_at: string | null
+          execution_notes: string | null
+          exercise_order: number | null
+          id: string
+          name: string
+          reps: string
+          rest_seconds: number | null
+          sets: number
+          video_url: string | null
+          weight_kg: number | null
+          workout_day_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          execution_notes?: string | null
+          exercise_order?: number | null
+          id?: string
+          name: string
+          reps: string
+          rest_seconds?: number | null
+          sets: number
+          video_url?: string | null
+          weight_kg?: number | null
+          workout_day_id: string
+        }
+        Update: {
+          created_at?: string | null
+          execution_notes?: string | null
+          exercise_order?: number | null
+          id?: string
+          name?: string
+          reps?: string
+          rest_seconds?: number | null
+          sets?: number
+          video_url?: string | null
+          weight_kg?: number | null
+          workout_day_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exercises_workout_day_id_fkey"
+            columns: ["workout_day_id"]
+            isOneToOne: false
+            referencedRelation: "workout_days"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           age: number | null
@@ -47,6 +97,44 @@ export type Database = {
           weight?: number | null
         }
         Relationships: []
+      }
+      workout_days: {
+        Row: {
+          created_at: string | null
+          day_name: string
+          day_number: number
+          id: string
+          is_rest_day: boolean | null
+          routine_id: string
+          week_number: number
+        }
+        Insert: {
+          created_at?: string | null
+          day_name: string
+          day_number: number
+          id?: string
+          is_rest_day?: boolean | null
+          routine_id: string
+          week_number?: number
+        }
+        Update: {
+          created_at?: string | null
+          day_name?: string
+          day_number?: number
+          id?: string
+          is_rest_day?: boolean | null
+          routine_id?: string
+          week_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workout_days_routine_id_fkey"
+            columns: ["routine_id"]
+            isOneToOne: false
+            referencedRelation: "workout_routines"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       workout_feedback: {
         Row: {
@@ -130,6 +218,47 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "workout_history_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workout_routines: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          total_weeks: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          total_weeks?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          total_weeks?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workout_routines_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
