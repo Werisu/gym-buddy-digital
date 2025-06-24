@@ -263,7 +263,7 @@ const Index = () => {
     }
   }, [user, fetchDashboardStats]);
 
-  // Atualização automática a cada 30 segundos quando a página está em foco
+  // Atualização por eventos específicos
   useEffect(() => {
     if (!user) return;
 
@@ -283,18 +283,9 @@ const Index = () => {
     // Atualizar quando um treino é concluído
     window.addEventListener('workoutCompleted', handleWorkoutCompleted);
 
-    // Atualizar a cada 30 segundos
-    const interval = setInterval(() => {
-      if (document.visibilityState === 'visible') {
-        console.log('Auto refresh - updating dashboard data');
-        fetchDashboardStats();
-      }
-    }, 30000); // 30 segundos
-
     return () => {
       window.removeEventListener('focus', handleFocus);
       window.removeEventListener('workoutCompleted', handleWorkoutCompleted);
-      clearInterval(interval);
     };
   }, [user, fetchDashboardStats]);
 
