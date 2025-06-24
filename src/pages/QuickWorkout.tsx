@@ -1,3 +1,4 @@
+import { Header } from '@/components/Header';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,7 +7,6 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import {
-    ArrowLeft,
     Calendar,
     Check,
     Dumbbell,
@@ -265,7 +265,7 @@ export default function QuickWorkout() {
                 onClick={() => setIsWorkoutStarted(false)}
                 className="border-gray-700 text-gray-300"
               >
-                <ArrowLeft className="w-4 h-4 mr-2" />
+                <Play className="w-4 h-4 mr-2" />
                 Voltar
               </Button>
               <div>
@@ -451,23 +451,19 @@ export default function QuickWorkout() {
 
   // Routine and day selection view
   return (
-    <div className="min-h-screen bg-gradient-to-br from-fitness-dark via-gray-900 to-black p-4">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <Link to="/">
-            <Button variant="outline" size="sm" className="border-gray-700 text-gray-300">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Voltar
-            </Button>
-          </Link>
-          <div>
-            <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-              <Zap className="w-8 h-8 text-fitness-primary" />
-              Treino Rápido
-            </h1>
-            <p className="text-gray-400">Escolha uma rotina e comece seu treino agora!</p>
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-fitness-dark via-gray-900 to-black">
+      <Header 
+        title="Gym Buddy"
+        subtitle="Treino Rápido"
+      />
+
+      <div className="max-w-6xl mx-auto p-4">
+        <div className="mb-8 mt-6">
+          <h2 className="text-3xl font-bold text-white flex items-center gap-3 mb-2">
+            <Zap className="w-8 h-8 text-fitness-primary" />
+            Treino Rápido
+          </h2>
+          <p className="text-gray-400">Escolha uma rotina e comece seu treino agora!</p>
         </div>
 
         {routines.length === 0 ? (

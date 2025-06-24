@@ -1,11 +1,12 @@
 import { DynamicWeeklySchedule } from "@/components/DynamicWeeklySchedule";
+import { Header } from "@/components/Header";
 import { StatsCard } from "@/components/StatsCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { Calendar, Clock, Dumbbell, Home, LogOut, Play, Plus, Target, Trophy, User } from "lucide-react";
+import { Calendar, Clock, Dumbbell, Play, Plus, Target, Trophy, User } from "lucide-react";
 import { useEffect, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 
@@ -80,34 +81,120 @@ const Index = () => {
 
       if (exercisesError) throw exercisesError;
 
-      // Calcular próximo treino
-      const nextWorkoutDay = workoutDays?.find(d => !d.is_rest_day);
-      const nextWorkoutExercises = exercises?.filter(e => e.workout_day_id === nextWorkoutDay?.id) || [];
+      // Buscar histórico de treinos
+      const { data: workoutHistory, error: historyError } = await supabase
+        .from('workout_history')
+        .select('*')
+        .eq('user_id', user?.id)
+        .order('workout_date', { ascending: false });
 
-      // Simular progresso semanal (pode ser expandido com dados reais)
-      const totalWeeklyWorkouts = workoutDays?.filter(d => !d.is_rest_day).length || 0;
-      const completedWeeklyWorkouts = Math.floor(totalWeeklyWorkouts * 0.6); // Simulação
+      if (historyError) throw historyError;
 
-      // Simular streak (pode ser expandido com dados reais de histórico)
-      const currentStreak = Math.floor(Math.random() * 15) + 1;
+      // Calcular próximo treino baseado na rotina ativa e semana atual
+      let nextWorkout = null;
+      if (activeRoutine) {
+        // Buscar dias da semana 1 da rotina ativa (pode ser expandido para detectar semana atual)
+        const activeDays = workoutDays?.filter(d => 
+          d.routine_id === activeRoutine.id && 
+          d.week_number === 1 && 
+          !d.is_rest_day
+        ) || [];
+        
+        if (activeDays.length > 0) {
+          const today = new Date();
+          const currentDayOfWeek = today.getDay(); // 0 = domingo, 1 = segunda, etc.
+          
+          // Encontrar próximo dia de treino
+          let nextDay = activeDays.find(d => d.day_number > currentDayOfWeek);
+          if (!nextDay) {
+            // Se não há mais dias esta semana, pegar o primeiro da próxima
+            nextDay = activeDays[0];
+          }
+          
+          const nextWorkoutExercises = exercises?.filter(e => e.workout_day_id === nextDay.id) || [];
+          nextWorkout = {
+            name: nextDay.day_name,
+            exerciseCount: nextWorkoutExercises.length
+          };
+        }
+      }
+
+      // Calcular progresso semanal baseado no histórico
+      const now = new Date();
+      const startOfWeek = new Date(now);
+      const daysToSubtract = now.getDay() === 0 ? 6 : now.getDay() - 1;
+      startOfWeek.setDate(now.getDate() - daysToSubtract);
+      startOfWeek.setHours(0, 0, 0, 0);
+      
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 6);
+      endOfWeek.setHours(23, 59, 59, 999);
+
+      const thisWeekWorkouts = workoutHistory?.filter(w => {
+        const workoutDate = new Date(w.workout_date);
+        return workoutDate >= startOfWeek && workoutDate <= endOfWeek;
+      }) || [];
+
+      // Calcular total de treinos planejados para esta semana
+      const plannedWorkoutsThisWeek = activeRoutine ? 
+        workoutDays?.filter(d => 
+          d.routine_id === activeRoutine.id && 
+          d.week_number === 1 && 
+          !d.is_rest_day
+        ).length || 0 : 0;
+
+      // Calcular sequência atual (dias consecutivos com treino)
+      let currentStreak = 0;
+      if (workoutHistory && workoutHistory.length > 0) {
+        const sortedHistory = [...workoutHistory].sort((a, b) => 
+          new Date(b.workout_date).getTime() - new Date(a.workout_date).getTime()
+        );
+
+        let checkDate = new Date();
+        checkDate.setHours(0, 0, 0, 0);
+        
+        // Se não treinou hoje, começar de ontem
+        const todayWorkout = sortedHistory.find(w => 
+          new Date(w.workout_date).toDateString() === checkDate.toDateString()
+        );
+        
+        if (!todayWorkout) {
+          checkDate.setDate(checkDate.getDate() - 1);
+        }
+
+        // Contar dias consecutivos
+        for (const workout of sortedHistory) {
+          const workoutDate = new Date(workout.workout_date);
+          workoutDate.setHours(0, 0, 0, 0);
+          
+          if (workoutDate.getTime() === checkDate.getTime()) {
+            currentStreak++;
+            checkDate.setDate(checkDate.getDate() - 1);
+          } else if (workoutDate.getTime() < checkDate.getTime()) {
+            // Encontrou uma lacuna
+            break;
+          }
+        }
+      }
+
+      // Último treino
+      const lastWorkout = workoutHistory && workoutHistory.length > 0 ? 
+        new Date(workoutHistory[0].workout_date) : null;
 
       setDashboardStats({
         totalRoutines: routines?.length || 0,
         activeRoutine: activeRoutine?.name || null,
         totalExercises: exercises?.length || 0,
         totalWorkoutDays: workoutDays?.length || 0,
-        nextWorkout: nextWorkoutDay ? {
-          name: nextWorkoutDay.day_name,
-          exerciseCount: nextWorkoutExercises.length
-        } : null,
+        nextWorkout,
         weeklyProgress: {
-          completed: completedWeeklyWorkouts,
-          total: totalWeeklyWorkouts,
-          percentage: totalWeeklyWorkouts > 0 ? (completedWeeklyWorkouts / totalWeeklyWorkouts) * 100 : 0
+          completed: thisWeekWorkouts.length,
+          total: plannedWorkoutsThisWeek,
+          percentage: plannedWorkoutsThisWeek > 0 ? (thisWeekWorkouts.length / plannedWorkoutsThisWeek) * 100 : 0
         },
         recentActivity: {
           streak: currentStreak,
-          lastWorkout: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000) // Último treino simulado
+          lastWorkout
         }
       });
 
@@ -120,6 +207,104 @@ const Index = () => {
       });
     } finally {
       setLoadingStats(false);
+    }
+  };
+
+  const createTestWorkoutHistory = async () => {
+    if (!user) return;
+
+    const testWorkouts = [
+      {
+        user_id: user.id,
+        workout_name: "Treino de Braços",
+        workout_date: new Date().toISOString().split('T')[0], // Hoje
+        duration_minutes: 45,
+        exercises_completed: 8,
+        total_exercises: 8
+      },
+      {
+        user_id: user.id,
+        workout_name: "Treino de Peito",
+        workout_date: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0], // Ontem
+        duration_minutes: 50,
+        exercises_completed: 6,
+        total_exercises: 6
+      },
+      {
+        user_id: user.id,
+        workout_name: "Treino de Costas",
+        workout_date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // Anteontem
+        duration_minutes: 55,
+        exercises_completed: 7,
+        total_exercises: 7
+      },
+      {
+        user_id: user.id,
+        workout_name: "Treino de Pernas",
+        workout_date: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 4 dias atrás
+        duration_minutes: 60,
+        exercises_completed: 9,
+        total_exercises: 9
+      },
+      {
+        user_id: user.id,
+        workout_name: "Treino de Ombros",
+        workout_date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 5 dias atrás
+        duration_minutes: 40,
+        exercises_completed: 5,
+        total_exercises: 5
+      }
+    ];
+
+    try {
+      const { error } = await supabase
+        .from('workout_history')
+        .insert(testWorkouts);
+
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso!",
+        description: "Dados de teste criados com sucesso",
+      });
+
+      // Recarregar estatísticas
+      fetchDashboardStats();
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      toast({
+        title: "Erro",
+        description: `Erro ao criar dados de teste: ${errorMessage}`,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const clearWorkoutHistory = async () => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('workout_history')
+        .delete()
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso!",
+        description: "Histórico limpo com sucesso",
+      });
+
+      // Recarregar estatísticas
+      fetchDashboardStats();
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      toast({
+        title: "Erro",
+        description: `Erro ao limpar histórico: ${errorMessage}`,
+        variant: "destructive"
+      });
     }
   };
 
@@ -136,10 +321,6 @@ const Index = () => {
     );
   }
 
-  const handleSignOut = async () => {
-    await signOut();
-  };
-
   const formatLastWorkout = (date: Date | null) => {
     if (!date) return 'Nunca';
     const now = new Date();
@@ -151,51 +332,10 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-fitness-dark via-gray-900 to-black">
-      {/* Header */}
-      <header className="border-b border-gray-800 bg-fitness-dark/50 backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <Dumbbell className="w-8 h-8 text-fitness-primary" />
-              <div>
-                <h1 className="text-2xl font-bold text-white">Gym Buddy</h1>
-                <p className="text-sm text-gray-400">
-                  {dashboardStats.activeRoutine || 'Nenhuma rotina ativa'}
-                </p>
-              </div>
-            </div>
-            
-            <div className="flex items-center space-x-4">
-            <Link to="/">
-                <Button variant="outline" className="border-gray-700 text-gray-300 hover:bg-gray-800">
-                  <Home className="w-4 h-4 mr-2" />
-                  Home
-                </Button>
-              </Link>
-              <Link to="/workouts">
-                <Button variant="outline" className="border-gray-700 text-gray-300 hover:bg-gray-800">
-                  <Dumbbell className="w-4 h-4 mr-2" />
-                  Meus Treinos
-                </Button>
-              </Link>
-              <Link to="/profile">
-                <Button variant="outline" className="border-gray-700 text-gray-300 hover:bg-gray-800">
-                  <User className="w-4 h-4 mr-2" />
-                  Perfil
-                </Button>
-              </Link>
-              <Button
-                variant="outline"
-                onClick={handleSignOut}
-                className="border-gray-700 text-gray-300 hover:bg-gray-800"
-              >
-                <LogOut className="w-4 h-4 mr-2" />
-                Sair
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header 
+        title="Gym Buddy"
+        subtitle={dashboardStats.activeRoutine || 'Nenhuma rotina ativa'}
+      />
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
@@ -263,17 +403,36 @@ const Index = () => {
         <div className="mb-8">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-2xl font-bold text-white">Cronograma Semanal</h3>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={fetchDashboardStats}
-              className="border-gray-700 text-gray-300"
-              disabled={loadingStats}
-            >
-              {loadingStats ? 'Atualizando...' : 'Atualizar'}
-            </Button>
+            <div className="flex gap-2">
+              {/* Botões temporários para teste */}
+              <Button
+                onClick={createTestWorkoutHistory}
+                variant="outline"
+                size="sm"
+                className="border-green-500 text-green-400 hover:bg-green-500/10"
+              >
+                Criar Dados Teste
+              </Button>
+              <Button
+                onClick={clearWorkoutHistory}
+                variant="outline"
+                size="sm"
+                className="border-red-500 text-red-400 hover:bg-red-500/10"
+              >
+                Limpar Histórico
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={fetchDashboardStats}
+                className="border-gray-700 text-gray-300"
+                disabled={loadingStats}
+              >
+                {loadingStats ? 'Atualizando...' : 'Atualizar'}
+              </Button>
+            </div>
           </div>
-          <DynamicWeeklySchedule currentWeek={1} />
+          <DynamicWeeklySchedule />
         </div>
 
         {/* Quick Actions */}

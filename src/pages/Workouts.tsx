@@ -1,14 +1,14 @@
-
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
+import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
-import { Navigate } from 'react-router-dom';
-import { Dumbbell, Plus, Calendar, Edit, Trash2, Play } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 import { CreateRoutineDialog } from '@/components/workouts/CreateRoutineDialog';
 import { WorkoutRoutineCard } from '@/components/workouts/WorkoutRoutineCard';
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { Dumbbell, Plus } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Navigate } from 'react-router-dom';
 
 interface WorkoutRoutine {
   id: string;
@@ -26,16 +26,16 @@ export default function Workouts() {
   const [loading, setLoading] = useState(true);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
 
-  // Redirect if not authenticated
-  if (!user && !authLoading) {
-    return <Navigate to="/auth" replace />;
-  }
-
   useEffect(() => {
     if (user) {
       fetchRoutines();
     }
   }, [user]);
+
+  // Redirect if not authenticated
+  if (!user && !authLoading) {
+    return <Navigate to="/auth" replace />;
+  }
 
   const fetchRoutines = async () => {
     try {
@@ -49,10 +49,11 @@ export default function Workouts() {
       }
 
       setRoutines(data || []);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Erro ao carregar rotinas de treino";
       toast({
         title: "Erro",
-        description: "Erro ao carregar rotinas de treino",
+        description: errorMessage,
         variant: "destructive"
       });
       console.error('Error fetching routines:', error);
@@ -83,10 +84,11 @@ export default function Workouts() {
         title: "Sucesso!",
         description: "Rotina de treino criada com sucesso",
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Erro ao criar rotina";
       toast({
         title: "Erro",
-        description: error.message || "Erro ao criar rotina",
+        description: errorMessage,
         variant: "destructive"
       });
     }
@@ -109,10 +111,11 @@ export default function Workouts() {
         title: "Sucesso!",
         description: "Rotina removida com sucesso",
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Erro ao remover rotina";
       toast({
         title: "Erro",
-        description: error.message || "Erro ao remover rotina",
+        description: errorMessage,
         variant: "destructive"
       });
     }
@@ -145,10 +148,11 @@ export default function Workouts() {
         title: "Sucesso!",
         description: "Rotina ativada com sucesso",
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Erro ao ativar rotina";
       toast({
         title: "Erro",
-        description: error.message || "Erro ao ativar rotina",
+        description: errorMessage,
         variant: "destructive"
       });
     }
@@ -163,15 +167,21 @@ export default function Workouts() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-fitness-dark via-gray-900 to-black p-4">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
+    <div className="min-h-screen bg-gradient-to-br from-fitness-dark via-gray-900 to-black">
+      <Header 
+        title="Gym Buddy"
+        subtitle="Rotinas de Treino"
+      />
+
+      {/* Content */}
+      <div className="max-w-6xl mx-auto p-4">
+        <div className="mb-8 mt-6 flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
+            <div className="flex items-center gap-3 mb-2">
               <Dumbbell className="w-8 h-8 text-fitness-primary" />
-              Rotinas de Treino
-            </h1>
-            <p className="text-gray-400">Gerencie suas rotinas e exercícios</p>
+              <h2 className="text-3xl font-bold text-white">Suas Rotinas</h2>
+            </div>
+            <p className="text-gray-400">Gerencie e organize seus treinos</p>
           </div>
           <Button
             onClick={() => setShowCreateDialog(true)}
