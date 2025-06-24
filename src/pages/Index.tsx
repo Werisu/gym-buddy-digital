@@ -156,11 +156,12 @@ const Index = () => {
         console.log('Data de verificação inicial:', checkDate.toISOString().split('T')[0]);
         
         // Se não treinou hoje, começar de ontem
-        const todayWorkout = sortedHistory.find(w => 
-          new Date(w.workout_date).toDateString() === checkDate.toDateString()
-        );
+        const todayDateString = checkDate.toISOString().split('T')[0];
+        const todayWorkout = sortedHistory.find(w => w.workout_date === todayDateString);
         
         console.log('Treino hoje?', todayWorkout ? 'SIM' : 'NÃO');
+        console.log('Hoje (YYYY-MM-DD):', todayDateString);
+        console.log('Treinos de hoje encontrados:', sortedHistory.filter(w => w.workout_date === todayDateString));
         
         if (!todayWorkout) {
           checkDate.setDate(checkDate.getDate() - 1);
@@ -171,10 +172,12 @@ const Index = () => {
         for (const workout of sortedHistory) {
           const workoutDate = new Date(workout.workout_date);
           workoutDate.setHours(0, 0, 0, 0);
+          const workoutDateString = workoutDate.toISOString().split('T')[0];
+          const checkDateString = checkDate.toISOString().split('T')[0];
           
-          console.log(`Verificando: ${workout.workout_date} vs ${checkDate.toISOString().split('T')[0]}`);
+          console.log(`Verificando: ${workout.workout_date} vs ${checkDateString}`);
           
-          if (workoutDate.getTime() === checkDate.getTime()) {
+          if (workoutDateString === checkDateString) {
             currentStreak++;
             console.log(`✅ Match! Sequência: ${currentStreak}`);
             checkDate.setDate(checkDate.getDate() - 1);
