@@ -3,7 +3,18 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
-import { Check, Dumbbell, Pause, Play, SkipForward, Timer, X } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import {
+    Check,
+    Dumbbell,
+    Pause,
+    Play,
+    SkipForward,
+    Timer,
+    X
+} from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 interface Exercise {
@@ -51,6 +62,8 @@ export function WorkoutExecution({
   workoutDay, 
   exercises 
 }: WorkoutExecutionProps) {
+  const { user } = useAuth();
+  const { toast } = useToast();
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
   const [exerciseProgress, setExerciseProgress] = useState<ExerciseProgress[]>([]);
   const [isResting, setIsResting] = useState(false);
@@ -166,6 +179,49 @@ export function WorkoutExecution({
     setRestTimeLeft(0);
   };
 
+  const saveWorkoutToHistory = async () => {
+    if (!user || !workoutDay) return;
+
+    try {
+      const completedExercises = exerciseProgress.filter(p => p.isCompleted).length;
+      const totalExercises = sortedExercises.length;
+
+      const workoutHistoryData = {
+        user_id: user.id,
+        workout_name: workoutDay.day_name,
+        workout_date: new Date().toISOString().split('T')[0], // Data atual
+        duration_minutes: Math.round(workoutDuration / 60), // Converter segundos para minutos
+        exercises_completed: completedExercises,
+        total_exercises: totalExercises
+      };
+
+      const { error } = await supabase
+        .from('workout_history')
+        .insert([workoutHistoryData]);
+
+      if (error) {
+        console.error('Error saving workout history:', error);
+        toast({
+          title: "Aviso",
+          description: "Treino concluído, mas houve erro ao salvar no histórico",
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Treino Salvo!",
+          description: "Seu treino foi registrado no histórico com sucesso",
+        });
+      }
+    } catch (error) {
+      console.error('Error saving workout to history:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao salvar treino no histórico",
+        variant: "destructive"
+      });
+    }
+  };
+
   const handleNextExercise = () => {
     if (currentExerciseIndex < sortedExercises.length - 1) {
       setCurrentExerciseIndex(prev => prev + 1);
@@ -186,7 +242,14 @@ export function WorkoutExecution({
   const completedExercises = exerciseProgress.filter(p => p.isCompleted).length;
   const progressPercentage = totalExercises > 0 ? (completedExercises / totalExercises) * 100 : 0;
 
-  const isWorkoutComplete = completedExercises === totalExercises;
+  const isWorkoutComplete = completedExercises === totalExercises && totalExercises > 0;
+
+  // Salvar automaticamente quando treino é concluído
+  useEffect(() => {
+    if (isWorkoutComplete && !isPaused) {
+      saveWorkoutToHistory();
+    }
+  }, [isWorkoutComplete, isPaused]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

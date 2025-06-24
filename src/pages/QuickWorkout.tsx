@@ -230,13 +230,63 @@ export default function QuickWorkout() {
     setRestTimeLeft(0);
   };
 
+  const saveWorkoutToHistory = async () => {
+    if (!user || !selectedDay || !selectedRoutine) return;
+
+    try {
+      const completedExercises = exerciseProgress.filter(p => p.isCompleted).length;
+      const totalExercises = exercises.length;
+
+      const workoutHistoryData = {
+        user_id: user.id,
+        workout_name: selectedDay.day_name,
+        workout_date: new Date().toISOString().split('T')[0], // Data atual
+        duration_minutes: Math.round(workoutDuration / 60), // Converter segundos para minutos
+        exercises_completed: completedExercises,
+        total_exercises: totalExercises
+      };
+
+      const { error } = await supabase
+        .from('workout_history')
+        .insert([workoutHistoryData]);
+
+      if (error) {
+        console.error('Error saving workout history:', error);
+        toast({
+          title: "Aviso",
+          description: "Treino concluído, mas houve erro ao salvar no histórico",
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Treino Salvo!",
+          description: "Seu treino foi registrado no histórico com sucesso",
+        });
+      }
+    } catch (error) {
+      console.error('Error saving workout to history:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao salvar treino no histórico",
+        variant: "destructive"
+      });
+    }
+  };
+
   const sortedExercises = exercises.sort((a, b) => (a.exercise_order || 0) - (b.exercise_order || 0));
   const currentExercise = sortedExercises[currentExerciseIndex];
   const currentProgress = exerciseProgress.find(p => p.exerciseId === currentExercise?.id);
   const totalExercises = sortedExercises.length;
   const completedExercises = exerciseProgress.filter(p => p.isCompleted).length;
   const progressPercentage = totalExercises > 0 ? (completedExercises / totalExercises) * 100 : 0;
-  const isWorkoutComplete = completedExercises === totalExercises;
+  const isWorkoutComplete = completedExercises === totalExercises && totalExercises > 0;
+
+  // Salvar automaticamente quando treino é concluído
+  useEffect(() => {
+    if (isWorkoutComplete && !isPaused) {
+      saveWorkoutToHistory();
+    }
+  }, [isWorkoutComplete, isPaused]);
 
   // Redirect if not authenticated
   if (!user && !authLoading) {
