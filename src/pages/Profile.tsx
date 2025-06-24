@@ -8,8 +8,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Calendar, Ruler, Target, TrendingUp, User, Weight } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Calendar, Camera, Ruler, Target, TrendingUp, Upload, User, Weight } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Navigate } from 'react-router-dom';
 import * as z from 'zod';
@@ -34,6 +34,7 @@ interface Profile {
   age: number | null;
   goal: string | null;
   experience_level: string | null;
+  avatar_url: string | null;
 }
 
 export default function Profile() {
@@ -42,6 +43,8 @@ export default function Profile() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
     register,
@@ -98,6 +101,91 @@ export default function Profile() {
       console.error('Error:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const uploadAvatar = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      setUploading(true);
+
+      if (!event.target.files || event.target.files.length === 0) {
+        throw new Error('Você deve selecionar uma imagem para upload.');
+      }
+
+      const file = event.target.files[0];
+      
+      // Validar tipo e tamanho do arquivo
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+      if (!allowedTypes.includes(file.type)) {
+        throw new Error('Tipo de arquivo não suportado. Use JPG, PNG ou GIF.');
+      }
+
+      if (file.size > 5 * 1024 * 1024) { // 5MB
+        throw new Error('Arquivo muito grande. Máximo 5MB.');
+      }
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `avatar-${Date.now()}.${fileExt}`;
+      // Estrutura baseada no artigo oficial: user_id/filename
+      const filePath = `${user?.id}/${fileName}`;
+
+      console.log('Iniciando upload:', { fileName, filePath, fileSize: file.size, fileType: file.type, userId: user?.id });
+
+      // Upload direto - sem verificar buckets (conforme artigo)
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('profiles')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
+
+      if (uploadError) {
+        console.error('Erro no upload:', uploadError);
+        throw new Error(`Erro no upload: ${uploadError.message}`);
+      }
+
+      console.log('Upload realizado com sucesso:', uploadData);
+
+      // Obter URL pública da imagem
+      const { data: urlData } = supabase.storage
+        .from('profiles')
+        .getPublicUrl(filePath);
+
+      console.log('URL pública gerada:', urlData.publicUrl);
+
+      // Atualizar perfil com a nova URL do avatar
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: urlData.publicUrl })
+        .eq('id', user?.id);
+
+      if (updateError) {
+        console.error('Erro ao atualizar perfil:', updateError);
+        throw new Error(`Erro ao salvar no perfil: ${updateError.message}`);
+      }
+
+      // Atualizar estado local
+      setProfile(prev => prev ? { ...prev, avatar_url: urlData.publicUrl } : null);
+
+      toast({
+        title: "Sucesso!",
+        description: "Avatar atualizado com sucesso",
+      });
+
+    } catch (error: unknown) {
+      console.error('Erro completo no upload:', error);
+      const errorMessage = error instanceof Error ? error.message : "Erro ao fazer upload da imagem";
+      toast({
+        title: "Erro",
+        description: errorMessage,
+        variant: "destructive"
+      });
+    } finally {
+      setUploading(false);
+      // Limpar o input file
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
@@ -160,6 +248,64 @@ export default function Profile() {
           <h2 className="text-3xl font-bold text-white mb-2">Meu Perfil</h2>
           <p className="text-gray-400">Gerencie seus dados pessoais</p>
         </div>
+
+        {/* Avatar Section */}
+        <Card className="glass-card border-gray-800 mb-6">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center gap-2">
+              <Camera className="w-5 h-5 text-fitness-primary" />
+              Foto do Perfil
+            </CardTitle>
+            <CardDescription className="text-gray-400">
+              Adicione uma foto para personalizar seu perfil
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-6">
+              <div className="relative">
+                <div className="w-24 h-24 rounded-full bg-gray-800 border-2 border-gray-700 flex items-center justify-center overflow-hidden">
+                  {profile?.avatar_url ? (
+                    <img
+                      src={profile.avatar_url}
+                      alt="Avatar"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <User className="w-12 h-12 text-gray-500" />
+                  )}
+                </div>
+                {uploading && (
+                  <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-fitness-primary"></div>
+                  </div>
+                )}
+              </div>
+              
+              <div className="flex-1">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={uploadAvatar}
+                  accept="image/*"
+                  className="hidden"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  className="border-gray-700 text-gray-300 hover:bg-gray-800"
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  {uploading ? 'Enviando...' : 'Alterar Foto'}
+                </Button>
+                <p className="text-sm text-gray-500 mt-2">
+                  JPG, PNG ou GIF. Máximo 5MB.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         <Card className="glass-card border-gray-800">
           <CardHeader>
@@ -255,11 +401,10 @@ export default function Profile() {
                       <SelectValue placeholder="Selecione seu objetivo" />
                     </SelectTrigger>
                     <SelectContent className="bg-gray-800 border-gray-700">
-                      <SelectItem value="muscle_gain">Ganhar Massa Muscular</SelectItem>
-                      <SelectItem value="weight_loss">Perder Peso</SelectItem>
-                      <SelectItem value="strength">Aumentar Força</SelectItem>
-                      <SelectItem value="endurance">Melhorar Resistência</SelectItem>
-                      <SelectItem value="maintenance">Manutenção</SelectItem>
+                      <SelectItem value="hipertrofia">Ganhar Massa Muscular</SelectItem>
+                      <SelectItem value="perda_peso">Perder Peso</SelectItem>
+                      <SelectItem value="força">Aumentar Força</SelectItem>
+                      <SelectItem value="resistencia">Melhorar Resistência</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -274,9 +419,9 @@ export default function Profile() {
                       <SelectValue placeholder="Selecione seu nível" />
                     </SelectTrigger>
                     <SelectContent className="bg-gray-800 border-gray-700">
-                      <SelectItem value="beginner">Iniciante (0-1 ano)</SelectItem>
-                      <SelectItem value="intermediate">Intermediário (1-3 anos)</SelectItem>
-                      <SelectItem value="advanced">Avançado (3+ anos)</SelectItem>
+                      <SelectItem value="iniciante">Iniciante (0-1 ano)</SelectItem>
+                      <SelectItem value="intermediario">Intermediário (1-3 anos)</SelectItem>
+                      <SelectItem value="avancado">Avançado (3+ anos)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

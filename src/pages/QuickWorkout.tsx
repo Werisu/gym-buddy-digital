@@ -239,6 +239,11 @@ export default function QuickWorkout() {
       const completedExercises = exerciseProgress.filter(p => p.isCompleted).length;
       const totalExercises = exercises.length;
 
+      console.log('=== DEBUG SALVAMENTO TREINO ===');
+      console.log('workoutStartDate:', workoutStartDate);
+      console.log('Data atual:', new Date().toISOString().split('T')[0]);
+      console.log('selectedDay.day_name:', selectedDay.day_name);
+
       const workoutHistoryData = {
         user_id: user.id,
         workout_name: selectedDay.day_name,
@@ -247,6 +252,8 @@ export default function QuickWorkout() {
         exercises_completed: completedExercises,
         total_exercises: totalExercises
       };
+
+      console.log('Dados que serão salvos:', workoutHistoryData);
 
       const { error } = await supabase
         .from('workout_history')
@@ -260,10 +267,14 @@ export default function QuickWorkout() {
           variant: "destructive"
         });
       } else {
+        console.log('Treino salvo com sucesso!');
         toast({
           title: "Treino Salvo!",
           description: "Seu treino foi registrado no histórico com sucesso",
         });
+        
+        // Disparar evento para notificar outras páginas
+        window.dispatchEvent(new CustomEvent('workoutCompleted'));
       }
     } catch (error) {
       console.error('Error saving workout to history:', error);

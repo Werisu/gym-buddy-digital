@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useAuth } from '@/hooks/useAuth';
-import { Calendar, Dumbbell, Home, LogOut, Trophy, User } from "lucide-react";
+import { Calendar, Dumbbell, History, Home, LogOut, Trophy, User } from "lucide-react";
 import { Link, useLocation } from 'react-router-dom';
 
 interface HeaderProps {
@@ -56,6 +56,10 @@ export function Header({ title, subtitle }: HeaderProps) {
             <Link to="/workouts" className={getNavItemClass('/workouts')}>
               <Calendar className="w-4 h-4" />
               <span className="text-sm">Rotinas</span>
+            </Link>
+            <Link to="/workout-history" className={getNavItemClass('/workout-history')}>
+              <History className="w-4 h-4" />
+              <span className="text-sm">Histórico</span>
             </Link>
             <Link to="/profile" className={getNavItemClass('/profile')}>
               <User className="w-4 h-4" />

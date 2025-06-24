@@ -6,8 +6,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { Calendar, Clock, Dumbbell, Play, Plus, Target, Trophy, User } from "lucide-react";
-import { useEffect, useState } from 'react';
+import { Calendar, Clock, Dumbbell, History, Play, Plus, Target, Trophy, User } from "lucide-react";
+import { useCallback, useEffect, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 
 interface DashboardStats {
@@ -44,13 +44,7 @@ const Index = () => {
   });
   const [loadingStats, setLoadingStats] = useState(true);
 
-  useEffect(() => {
-    if (user) {
-      fetchDashboardStats();
-    }
-  }, [user]);
-
-  const fetchDashboardStats = async () => {
+  const fetchDashboardStats = useCallback(async () => {
     try {
       setLoadingStats(true);
 
@@ -130,18 +124,48 @@ const Index = () => {
       endOfWeek.setDate(startOfWeek.getDate() + 6);
       endOfWeek.setHours(23, 59, 59, 999);
 
+      console.log('=== DEBUG PROGRESSO SEMANAL ===');
+      console.log('Início da semana:', startOfWeek.toISOString().split('T')[0]);
+      console.log('Fim da semana:', endOfWeek.toISOString().split('T')[0]);
+
       const thisWeekWorkouts = workoutHistory?.filter(w => {
-        const workoutDate = new Date(w.workout_date);
-        return workoutDate >= startOfWeek && workoutDate <= endOfWeek;
+        // Usar comparação de strings para evitar problemas de fuso horário
+        const workoutDateStr = w.workout_date;
+        const startOfWeekStr = startOfWeek.toISOString().split('T')[0];
+        const endOfWeekStr = endOfWeek.toISOString().split('T')[0];
+        const isInRange = workoutDateStr >= startOfWeekStr && workoutDateStr <= endOfWeekStr;
+        console.log(`Treino ${workoutDateStr}: startOfWeek=${startOfWeekStr}, endOfWeek=${endOfWeekStr}, isInRange=${isInRange}`);
+        return isInRange;
       }) || [];
 
-      // Calcular total de treinos planejados para esta semana
-      const plannedWorkoutsThisWeek = activeRoutine ? 
-        workoutDays?.filter(d => 
+      console.log('Treinos desta semana (total):', thisWeekWorkouts.length);
+      console.log('Detalhes dos treinos:', thisWeekWorkouts.map(w => `${w.workout_date} - ${w.workout_name}`));
+
+      // Contar DIAS ÚNICOS com treino nesta semana (não treinos individuais)
+      const uniqueWorkoutDaysThisWeek = [...new Set(thisWeekWorkouts.map(w => w.workout_date))];
+      console.log('Dias únicos com treino:', uniqueWorkoutDaysThisWeek);
+      console.log('Total de dias com treino:', uniqueWorkoutDaysThisWeek.length);
+
+      // Calcular total de dias de treino planejados para esta semana baseado na rotina ativa
+      let plannedWorkoutDaysThisWeek = 0;
+      if (activeRoutine) {
+        // Buscar todos os dias de treino da rotina ativa (não apenas semana 1)
+        const activeDays = workoutDays?.filter(d => 
           d.routine_id === activeRoutine.id && 
-          d.week_number === 1 && 
           !d.is_rest_day
-        ).length || 0 : 0;
+        ) || [];
+        
+        console.log('Dias de treino na rotina ativa:', activeDays.map(d => `${d.day_name} (Dia ${d.day_number})`));
+        
+        // Contar quantos dias de treino únicos existem (baseado no day_number, não duplicatas)
+        const uniqueTrainingDays = [...new Set(activeDays.map(d => d.day_number))];
+        plannedWorkoutDaysThisWeek = uniqueTrainingDays.length;
+        
+        console.log('Dias únicos de treino planejados:', uniqueTrainingDays);
+        console.log('Total de dias de treino planejados por semana:', plannedWorkoutDaysThisWeek);
+      }
+
+      console.log('=== FIM DEBUG PROGRESSO SEMANAL ===');
 
       // Calcular sequência atual (dias consecutivos com treino)
       let currentStreak = 0;
@@ -150,31 +174,54 @@ const Index = () => {
           new Date(b.workout_date).getTime() - new Date(a.workout_date).getTime()
         );
 
-        let checkDate = new Date();
+        console.log('=== DEBUG SEQUÊNCIA ATUAL ===');
+        console.log('Histórico ordenado por data (mais recente primeiro):');
+        sortedHistory.forEach((w, i) => {
+          console.log(`${i}: ${w.workout_date} - ${w.workout_name}`);
+        });
+
+        const checkDate = new Date();
         checkDate.setHours(0, 0, 0, 0);
         
+        console.log('Data de verificação inicial:', checkDate.toISOString().split('T')[0]);
+        
         // Se não treinou hoje, começar de ontem
-        const todayWorkout = sortedHistory.find(w => 
-          new Date(w.workout_date).toDateString() === checkDate.toDateString()
-        );
+        const todayDateString = checkDate.toISOString().split('T')[0];
+        const todayWorkout = sortedHistory.find(w => w.workout_date === todayDateString);
+        
+        console.log('Treino hoje?', todayWorkout ? 'SIM' : 'NÃO');
+        console.log('Hoje (YYYY-MM-DD):', todayDateString);
+        console.log('Treinos de hoje encontrados:', sortedHistory.filter(w => w.workout_date === todayDateString));
         
         if (!todayWorkout) {
           checkDate.setDate(checkDate.getDate() - 1);
+          console.log('Começando de ontem:', checkDate.toISOString().split('T')[0]);
         }
 
         // Contar dias consecutivos
-        for (const workout of sortedHistory) {
-          const workoutDate = new Date(workout.workout_date);
-          workoutDate.setHours(0, 0, 0, 0);
+        const uniqueDates = [...new Set(sortedHistory.map(w => w.workout_date))].sort((a, b) => b.localeCompare(a));
+        console.log('Datas únicas ordenadas:', uniqueDates);
+        
+        for (const uniqueDate of uniqueDates) {
+          const checkDateString = checkDate.toISOString().split('T')[0];
           
-          if (workoutDate.getTime() === checkDate.getTime()) {
+          console.log(`Verificando: ${uniqueDate} vs ${checkDateString}`);
+          
+          if (uniqueDate === checkDateString) {
             currentStreak++;
+            console.log(`✅ Match! Sequência: ${currentStreak}`);
             checkDate.setDate(checkDate.getDate() - 1);
-          } else if (workoutDate.getTime() < checkDate.getTime()) {
-            // Encontrou uma lacuna
+            console.log(`Próxima data a verificar: ${checkDate.toISOString().split('T')[0]}`);
+          } else if (uniqueDate < checkDateString) {
+            console.log(`❌ Lacuna encontrada! Data do treino (${uniqueDate}) é anterior à data esperada (${checkDateString}). Sequência final: ${currentStreak}`);
+            // Encontrou uma lacuna - data do treino é anterior à data que estamos procurando
             break;
+          } else {
+            console.log(`⏭️ Treino no futuro (${uniqueDate} > ${checkDateString}), ignorando`);
           }
         }
+        
+        console.log('=== FIM DEBUG SEQUÊNCIA ===');
       }
 
       // Último treino
@@ -188,9 +235,9 @@ const Index = () => {
         totalWorkoutDays: workoutDays?.length || 0,
         nextWorkout,
         weeklyProgress: {
-          completed: thisWeekWorkouts.length,
-          total: plannedWorkoutsThisWeek,
-          percentage: plannedWorkoutsThisWeek > 0 ? (thisWeekWorkouts.length / plannedWorkoutsThisWeek) * 100 : 0
+          completed: uniqueWorkoutDaysThisWeek.length,
+          total: plannedWorkoutDaysThisWeek,
+          percentage: plannedWorkoutDaysThisWeek > 0 ? (uniqueWorkoutDaysThisWeek.length / plannedWorkoutDaysThisWeek) * 100 : 0
         },
         recentActivity: {
           streak: currentStreak,
@@ -208,105 +255,43 @@ const Index = () => {
     } finally {
       setLoadingStats(false);
     }
-  };
+  }, [user, toast]);
 
-  const createTestWorkoutHistory = async () => {
+  useEffect(() => {
+    if (user) {
+      fetchDashboardStats();
+    }
+  }, [user, fetchDashboardStats]);
+
+  // Atualização por eventos específicos
+  useEffect(() => {
     if (!user) return;
 
-    const testWorkouts = [
-      {
-        user_id: user.id,
-        workout_name: "Treino de Braços",
-        workout_date: new Date().toISOString().split('T')[0], // Hoje
-        duration_minutes: 45,
-        exercises_completed: 8,
-        total_exercises: 8
-      },
-      {
-        user_id: user.id,
-        workout_name: "Treino de Peito",
-        workout_date: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0], // Ontem
-        duration_minutes: 50,
-        exercises_completed: 6,
-        total_exercises: 6
-      },
-      {
-        user_id: user.id,
-        workout_name: "Treino de Costas",
-        workout_date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // Anteontem
-        duration_minutes: 55,
-        exercises_completed: 7,
-        total_exercises: 7
-      },
-      {
-        user_id: user.id,
-        workout_name: "Treino de Pernas",
-        workout_date: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 4 dias atrás
-        duration_minutes: 60,
-        exercises_completed: 9,
-        total_exercises: 9
-      },
-      {
-        user_id: user.id,
-        workout_name: "Treino de Ombros",
-        workout_date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 5 dias atrás
-        duration_minutes: 40,
-        exercises_completed: 5,
-        total_exercises: 5
-      }
-    ];
-
-    try {
-      const { error } = await supabase
-        .from('workout_history')
-        .insert(testWorkouts);
-
-      if (error) throw error;
-
-      toast({
-        title: "Sucesso!",
-        description: "Dados de teste criados com sucesso",
-      });
-
-      // Recarregar estatísticas
+    const handleFocus = () => {
+      console.log('Page focused - refreshing data');
       fetchDashboardStats();
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      toast({
-        title: "Erro",
-        description: `Erro ao criar dados de teste: ${errorMessage}`,
-        variant: "destructive"
-      });
-    }
-  };
+    };
 
-  const clearWorkoutHistory = async () => {
-    if (!user) return;
-
-    try {
-      const { error } = await supabase
-        .from('workout_history')
-        .delete()
-        .eq('user_id', user.id);
-
-      if (error) throw error;
-
-      toast({
-        title: "Sucesso!",
-        description: "Histórico limpo com sucesso",
-      });
-
-      // Recarregar estatísticas
+    const handleWorkoutCompleted = () => {
+      console.log('Workout completed - refreshing data immediately');
       fetchDashboardStats();
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      toast({
-        title: "Erro",
-        description: `Erro ao limpar histórico: ${errorMessage}`,
-        variant: "destructive"
-      });
-    }
-  };
+    };
+
+    // Atualizar quando a página ganha foco
+    window.addEventListener('focus', handleFocus);
+    
+    // Atualizar quando um treino é concluído
+    window.addEventListener('workoutCompleted', handleWorkoutCompleted);
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('workoutCompleted', handleWorkoutCompleted);
+    };
+  }, [user, fetchDashboardStats]);
+
+
+
+
 
   // Redirect to auth if not logged in
   if (!user && !loading) {
@@ -404,23 +389,6 @@ const Index = () => {
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-2xl font-bold text-white">Cronograma Semanal</h3>
             <div className="flex gap-2">
-              {/* Botões temporários para teste */}
-              <Button
-                onClick={createTestWorkoutHistory}
-                variant="outline"
-                size="sm"
-                className="border-green-500 text-green-400 hover:bg-green-500/10"
-              >
-                Criar Dados Teste
-              </Button>
-              <Button
-                onClick={clearWorkoutHistory}
-                variant="outline"
-                size="sm"
-                className="border-red-500 text-red-400 hover:bg-red-500/10"
-              >
-                Limpar Histórico
-              </Button>
               <Button
                 variant="outline"
                 size="sm"
@@ -428,7 +396,14 @@ const Index = () => {
                 className="border-gray-700 text-gray-300"
                 disabled={loadingStats}
               >
-                {loadingStats ? 'Atualizando...' : 'Atualizar'}
+                {loadingStats ? (
+                  <>
+                    <div className="animate-spin w-3 h-3 border border-gray-400 border-t-transparent rounded-full mr-2" />
+                    Atualizando...
+                  </>
+                ) : (
+                  'Atualizar Dados'
+                )}
               </Button>
             </div>
           </div>
@@ -499,6 +474,16 @@ const Index = () => {
               </CardContent>
             </Card>
             
+            <Link to="/workout-history">
+              <Card className="glass-card border-gray-800 hover:border-fitness-primary/50 transition-colors cursor-pointer">
+                <CardContent className="p-6 text-center">
+                  <History className="w-8 h-8 text-fitness-primary mx-auto mb-3" />
+                  <h4 className="text-white font-semibold mb-1">Histórico</h4>
+                  <p className="text-gray-400 text-sm">Ver Treinos Passados</p>
+                </CardContent>
+              </Card>
+            </Link>
+            
             <Link to="/profile">
               <Card className="glass-card border-gray-800 hover:border-fitness-primary/50 transition-colors cursor-pointer">
                 <CardContent className="p-6 text-center">
@@ -516,3 +501,4 @@ const Index = () => {
 };
 
 export default Index;
+
