@@ -255,11 +255,10 @@ export default function Profile() {
                       <SelectValue placeholder="Selecione seu objetivo" />
                     </SelectTrigger>
                     <SelectContent className="bg-gray-800 border-gray-700">
-                      <SelectItem value="muscle_gain">Ganhar Massa Muscular</SelectItem>
-                      <SelectItem value="weight_loss">Perder Peso</SelectItem>
-                      <SelectItem value="strength">Aumentar Força</SelectItem>
-                      <SelectItem value="endurance">Melhorar Resistência</SelectItem>
-                      <SelectItem value="maintenance">Manutenção</SelectItem>
+                      <SelectItem value="hipertrofia">Ganhar Massa Muscular</SelectItem>
+                      <SelectItem value="perda_peso">Perder Peso</SelectItem>
+                      <SelectItem value="força">Aumentar Força</SelectItem>
+                      <SelectItem value="resistencia">Melhorar Resistência</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -274,9 +273,9 @@ export default function Profile() {
                       <SelectValue placeholder="Selecione seu nível" />
                     </SelectTrigger>
                     <SelectContent className="bg-gray-800 border-gray-700">
-                      <SelectItem value="beginner">Iniciante (0-1 ano)</SelectItem>
-                      <SelectItem value="intermediate">Intermediário (1-3 anos)</SelectItem>
-                      <SelectItem value="advanced">Avançado (3+ anos)</SelectItem>
+                      <SelectItem value="iniciante">Iniciante (0-1 ano)</SelectItem>
+                      <SelectItem value="intermediario">Intermediário (1-3 anos)</SelectItem>
+                      <SelectItem value="avancado">Avançado (3+ anos)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
