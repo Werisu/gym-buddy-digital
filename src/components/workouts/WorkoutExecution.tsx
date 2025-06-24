@@ -213,6 +213,9 @@ export function WorkoutExecution({
           title: "Treino Salvo!",
           description: "Seu treino foi registrado no histórico com sucesso",
         });
+        
+        // Disparar evento para notificar outras páginas
+        window.dispatchEvent(new CustomEvent('workoutCompleted'));
       }
     } catch (error) {
       console.error('Error saving workout to history:', error);

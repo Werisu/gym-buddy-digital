@@ -39,6 +39,17 @@ interface Exercise {
   exercise_order: number | null;
 }
 
+interface WorkoutHistoryEntry {
+  id: string;
+  user_id: string;
+  workout_name: string;
+  workout_date: string;
+  duration_minutes: number | null;
+  exercises_completed: number | null;
+  total_exercises: number | null;
+  created_at: string;
+}
+
 interface DynamicWeeklyScheduleProps {
   currentWeek?: number;
 }
@@ -58,10 +69,11 @@ interface WeekDay {
 
 export const DynamicWeeklySchedule = ({ currentWeek = 1 }: DynamicWeeklyScheduleProps) => {
   const { user } = useAuth();
-  const [workoutDays, setWorkoutDays] = useState<WorkoutDay[]>([]);
-  const [exercises, setExercises] = useState<Exercise[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeRoutine, setActiveRoutine] = useState<WorkoutRoutine | null>(null);
+  const [workoutDays, setWorkoutDays] = useState<WorkoutDay[]>([]);
+  const [exercises, setExercises] = useState<Exercise[]>([]);
+  const [workoutHistory, setWorkoutHistory] = useState<WorkoutHistoryEntry[]>([]);
 
   useEffect(() => {
     console.log('DynamicWeeklySchedule useEffect triggered');
@@ -75,6 +87,20 @@ export const DynamicWeeklySchedule = ({ currentWeek = 1 }: DynamicWeeklySchedule
       console.log('No user found, skipping data fetch');
     }
   }, [user, currentWeek]);
+
+  // Listener para atualizar quando um treino é concluído
+  useEffect(() => {
+    const handleWorkoutCompleted = () => {
+      console.log('DynamicWeeklySchedule: Workout completed event received, refreshing data');
+      fetchWorkoutData();
+    };
+
+    window.addEventListener('workoutCompleted', handleWorkoutCompleted);
+
+    return () => {
+      window.removeEventListener('workoutCompleted', handleWorkoutCompleted);
+    };
+  }, [user]);
 
   const fetchWorkoutData = async () => {
     try {
@@ -145,6 +171,22 @@ export const DynamicWeeklySchedule = ({ currentWeek = 1 }: DynamicWeeklySchedule
         console.log('No workout days found, setting exercises to empty array');
         setExercises([]);
       }
+
+      // Buscar histórico de treinos
+      console.log('Fetching workout history for user:', user?.id);
+      const { data: historyData, error: historyError } = await supabase
+        .from('workout_history')
+        .select('*')
+        .eq('user_id', user?.id)
+        .order('workout_date', { ascending: false });
+
+      if (historyError) {
+        console.error('Error fetching workout history:', historyError);
+        return;
+      }
+
+      console.log('Workout history found:', historyData?.length || 0, historyData);
+      setWorkoutHistory(historyData || []);
 
     } catch (error) {
       console.error('Error fetching workout data:', error);
@@ -229,8 +271,10 @@ export const DynamicWeeklySchedule = ({ currentWeek = 1 }: DynamicWeeklySchedule
       const workoutDay = workoutDays.find(wd => wd.day_number === dayNumber);
       const dayExercises = exercises.filter(ex => ex.workout_day_id === workoutDay?.id);
       
-      // Remover lógica aleatória - progresso baseado em dados reais
-      const completed = false; // Por enquanto, sem histórico de treinos concluídos
+      // Verificar se este dia foi concluído baseado no histórico
+      const dateString = currentDate.toISOString().split('T')[0]; // Formato YYYY-MM-DD
+      const hasWorkoutOnThisDate = workoutHistory.some(h => h.workout_date === dateString);
+      const completed = hasWorkoutOnThisDate;
       
       weekDays.push({
         day: dayNames[i],

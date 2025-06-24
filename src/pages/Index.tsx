@@ -7,7 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Calendar, Clock, Dumbbell, Play, Plus, Target, Trophy, User } from "lucide-react";
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 
 interface DashboardStats {
@@ -44,13 +44,7 @@ const Index = () => {
   });
   const [loadingStats, setLoadingStats] = useState(true);
 
-  useEffect(() => {
-    if (user) {
-      fetchDashboardStats();
-    }
-  }, [user]);
-
-  const fetchDashboardStats = async () => {
+  const fetchDashboardStats = useCallback(async () => {
     try {
       setLoadingStats(true);
 
@@ -150,16 +144,27 @@ const Index = () => {
           new Date(b.workout_date).getTime() - new Date(a.workout_date).getTime()
         );
 
-        let checkDate = new Date();
+        console.log('=== DEBUG SEQUÊNCIA ATUAL ===');
+        console.log('Histórico ordenado por data (mais recente primeiro):');
+        sortedHistory.forEach((w, i) => {
+          console.log(`${i}: ${w.workout_date} - ${w.workout_name}`);
+        });
+
+        const checkDate = new Date();
         checkDate.setHours(0, 0, 0, 0);
+        
+        console.log('Data de verificação inicial:', checkDate.toISOString().split('T')[0]);
         
         // Se não treinou hoje, começar de ontem
         const todayWorkout = sortedHistory.find(w => 
           new Date(w.workout_date).toDateString() === checkDate.toDateString()
         );
         
+        console.log('Treino hoje?', todayWorkout ? 'SIM' : 'NÃO');
+        
         if (!todayWorkout) {
           checkDate.setDate(checkDate.getDate() - 1);
+          console.log('Começando de ontem:', checkDate.toISOString().split('T')[0]);
         }
 
         // Contar dias consecutivos
@@ -167,14 +172,23 @@ const Index = () => {
           const workoutDate = new Date(workout.workout_date);
           workoutDate.setHours(0, 0, 0, 0);
           
+          console.log(`Verificando: ${workout.workout_date} vs ${checkDate.toISOString().split('T')[0]}`);
+          
           if (workoutDate.getTime() === checkDate.getTime()) {
             currentStreak++;
+            console.log(`✅ Match! Sequência: ${currentStreak}`);
             checkDate.setDate(checkDate.getDate() - 1);
+            console.log(`Próxima data a verificar: ${checkDate.toISOString().split('T')[0]}`);
           } else if (workoutDate.getTime() < checkDate.getTime()) {
+            console.log(`❌ Lacuna encontrada! Parando contagem. Sequência final: ${currentStreak}`);
             // Encontrou uma lacuna
             break;
+          } else {
+            console.log(`⏭️ Treino no futuro, ignorando`);
           }
         }
+        
+        console.log('=== FIM DEBUG SEQUÊNCIA ===');
       }
 
       // Último treino
@@ -208,7 +222,48 @@ const Index = () => {
     } finally {
       setLoadingStats(false);
     }
-  };
+  }, [user, toast]);
+
+  useEffect(() => {
+    if (user) {
+      fetchDashboardStats();
+    }
+  }, [user, fetchDashboardStats]);
+
+  // Atualização automática a cada 30 segundos quando a página está em foco
+  useEffect(() => {
+    if (!user) return;
+
+    const handleFocus = () => {
+      console.log('Page focused - refreshing data');
+      fetchDashboardStats();
+    };
+
+    const handleWorkoutCompleted = () => {
+      console.log('Workout completed - refreshing data immediately');
+      fetchDashboardStats();
+    };
+
+    // Atualizar quando a página ganha foco
+    window.addEventListener('focus', handleFocus);
+    
+    // Atualizar quando um treino é concluído
+    window.addEventListener('workoutCompleted', handleWorkoutCompleted);
+
+    // Atualizar a cada 30 segundos
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        console.log('Auto refresh - updating dashboard data');
+        fetchDashboardStats();
+      }
+    }, 30000); // 30 segundos
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('workoutCompleted', handleWorkoutCompleted);
+      clearInterval(interval);
+    };
+  }, [user, fetchDashboardStats]);
 
   const createTestWorkoutHistory = async () => {
     if (!user) return;
@@ -303,6 +358,44 @@ const Index = () => {
       toast({
         title: "Erro",
         description: `Erro ao limpar histórico: ${errorMessage}`,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const clearTestData = async () => {
+    if (!user) return;
+
+    try {
+      // Limpar apenas dados de teste (nomes específicos dos treinos de teste)
+      const testWorkoutNames = [
+        'Treino de Braços',
+        'Treino de Peito', 
+        'Treino de Costas',
+        'Treino de Pernas',
+        'Treino de Ombros'
+      ];
+
+      const { error } = await supabase
+        .from('workout_history')
+        .delete()
+        .eq('user_id', user.id)
+        .in('workout_name', testWorkoutNames);
+
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso!",
+        description: "Dados de teste removidos com sucesso",
+      });
+
+      // Recarregar estatísticas
+      fetchDashboardStats();
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      toast({
+        title: "Erro",
+        description: `Erro ao limpar dados de teste: ${errorMessage}`,
         variant: "destructive"
       });
     }
@@ -414,12 +507,20 @@ const Index = () => {
                 Criar Dados Teste
               </Button>
               <Button
-                onClick={clearWorkoutHistory}
+                onClick={clearTestData}
                 variant="outline"
                 size="sm"
                 className="border-red-500 text-red-400 hover:bg-red-500/10"
               >
-                Limpar Histórico
+                Limpar Dados Teste
+              </Button>
+              <Button
+                onClick={clearWorkoutHistory}
+                variant="outline"
+                size="sm"
+                className="border-orange-500 text-orange-400 hover:bg-orange-500/10"
+              >
+                Limpar Tudo
               </Button>
               <Button
                 variant="outline"
@@ -428,7 +529,14 @@ const Index = () => {
                 className="border-gray-700 text-gray-300"
                 disabled={loadingStats}
               >
-                {loadingStats ? 'Atualizando...' : 'Atualizar'}
+                {loadingStats ? (
+                  <>
+                    <div className="animate-spin w-3 h-3 border border-gray-400 border-t-transparent rounded-full mr-2" />
+                    Atualizando...
+                  </>
+                ) : (
+                  'Atualizar Dados'
+                )}
               </Button>
             </div>
           </div>
@@ -516,3 +624,4 @@ const Index = () => {
 };
 
 export default Index;
+
