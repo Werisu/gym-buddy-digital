@@ -169,25 +169,25 @@ const Index = () => {
         }
 
         // Contar dias consecutivos
-        for (const workout of sortedHistory) {
-          const workoutDate = new Date(workout.workout_date);
-          workoutDate.setHours(0, 0, 0, 0);
-          const workoutDateString = workoutDate.toISOString().split('T')[0];
+        const uniqueDates = [...new Set(sortedHistory.map(w => w.workout_date))].sort((a, b) => b.localeCompare(a));
+        console.log('Datas únicas ordenadas:', uniqueDates);
+        
+        for (const uniqueDate of uniqueDates) {
           const checkDateString = checkDate.toISOString().split('T')[0];
           
-          console.log(`Verificando: ${workout.workout_date} vs ${checkDateString}`);
+          console.log(`Verificando: ${uniqueDate} vs ${checkDateString}`);
           
-          if (workoutDateString === checkDateString) {
+          if (uniqueDate === checkDateString) {
             currentStreak++;
             console.log(`✅ Match! Sequência: ${currentStreak}`);
             checkDate.setDate(checkDate.getDate() - 1);
             console.log(`Próxima data a verificar: ${checkDate.toISOString().split('T')[0]}`);
-          } else if (workoutDate.getTime() < checkDate.getTime()) {
-            console.log(`❌ Lacuna encontrada! Parando contagem. Sequência final: ${currentStreak}`);
-            // Encontrou uma lacuna
+          } else if (uniqueDate < checkDateString) {
+            console.log(`❌ Lacuna encontrada! Data do treino (${uniqueDate}) é anterior à data esperada (${checkDateString}). Sequência final: ${currentStreak}`);
+            // Encontrou uma lacuna - data do treino é anterior à data que estamos procurando
             break;
           } else {
-            console.log(`⏭️ Treino no futuro, ignorando`);
+            console.log(`⏭️ Treino no futuro (${uniqueDate} > ${checkDateString}), ignorando`);
           }
         }
         
@@ -268,141 +268,9 @@ const Index = () => {
     };
   }, [user, fetchDashboardStats]);
 
-  const createTestWorkoutHistory = async () => {
-    if (!user) return;
 
-    const testWorkouts = [
-      {
-        user_id: user.id,
-        workout_name: "Treino de Braços",
-        workout_date: new Date().toISOString().split('T')[0], // Hoje
-        duration_minutes: 45,
-        exercises_completed: 8,
-        total_exercises: 8
-      },
-      {
-        user_id: user.id,
-        workout_name: "Treino de Peito",
-        workout_date: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0], // Ontem
-        duration_minutes: 50,
-        exercises_completed: 6,
-        total_exercises: 6
-      },
-      {
-        user_id: user.id,
-        workout_name: "Treino de Costas",
-        workout_date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // Anteontem
-        duration_minutes: 55,
-        exercises_completed: 7,
-        total_exercises: 7
-      },
-      {
-        user_id: user.id,
-        workout_name: "Treino de Pernas",
-        workout_date: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 4 dias atrás
-        duration_minutes: 60,
-        exercises_completed: 9,
-        total_exercises: 9
-      },
-      {
-        user_id: user.id,
-        workout_name: "Treino de Ombros",
-        workout_date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 5 dias atrás
-        duration_minutes: 40,
-        exercises_completed: 5,
-        total_exercises: 5
-      }
-    ];
 
-    try {
-      const { error } = await supabase
-        .from('workout_history')
-        .insert(testWorkouts);
 
-      if (error) throw error;
-
-      toast({
-        title: "Sucesso!",
-        description: "Dados de teste criados com sucesso",
-      });
-
-      // Recarregar estatísticas
-      fetchDashboardStats();
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      toast({
-        title: "Erro",
-        description: `Erro ao criar dados de teste: ${errorMessage}`,
-        variant: "destructive"
-      });
-    }
-  };
-
-  const clearWorkoutHistory = async () => {
-    if (!user) return;
-
-    try {
-      const { error } = await supabase
-        .from('workout_history')
-        .delete()
-        .eq('user_id', user.id);
-
-      if (error) throw error;
-
-      toast({
-        title: "Sucesso!",
-        description: "Histórico limpo com sucesso",
-      });
-
-      // Recarregar estatísticas
-      fetchDashboardStats();
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      toast({
-        title: "Erro",
-        description: `Erro ao limpar histórico: ${errorMessage}`,
-        variant: "destructive"
-      });
-    }
-  };
-
-  const clearTestData = async () => {
-    if (!user) return;
-
-    try {
-      // Limpar apenas dados de teste (nomes específicos dos treinos de teste)
-      const testWorkoutNames = [
-        'Treino de Braços',
-        'Treino de Peito', 
-        'Treino de Costas',
-        'Treino de Pernas',
-        'Treino de Ombros'
-      ];
-
-      const { error } = await supabase
-        .from('workout_history')
-        .delete()
-        .eq('user_id', user.id)
-        .in('workout_name', testWorkoutNames);
-
-      if (error) throw error;
-
-      toast({
-        title: "Sucesso!",
-        description: "Dados de teste removidos com sucesso",
-      });
-
-      // Recarregar estatísticas
-      fetchDashboardStats();
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      toast({
-        title: "Erro",
-        description: `Erro ao limpar dados de teste: ${errorMessage}`,
-        variant: "destructive"
-      });
-    }
-  };
 
   // Redirect to auth if not logged in
   if (!user && !loading) {
@@ -500,31 +368,6 @@ const Index = () => {
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-2xl font-bold text-white">Cronograma Semanal</h3>
             <div className="flex gap-2">
-              {/* Botões temporários para teste */}
-              <Button
-                onClick={createTestWorkoutHistory}
-                variant="outline"
-                size="sm"
-                className="border-green-500 text-green-400 hover:bg-green-500/10"
-              >
-                Criar Dados Teste
-              </Button>
-              <Button
-                onClick={clearTestData}
-                variant="outline"
-                size="sm"
-                className="border-red-500 text-red-400 hover:bg-red-500/10"
-              >
-                Limpar Dados Teste
-              </Button>
-              <Button
-                onClick={clearWorkoutHistory}
-                variant="outline"
-                size="sm"
-                className="border-orange-500 text-orange-400 hover:bg-orange-500/10"
-              >
-                Limpar Tudo
-              </Button>
               <Button
                 variant="outline"
                 size="sm"
