@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { Calendar, Clock, Dumbbell, LogOut, Play, Plus, Target, Trophy, User } from "lucide-react";
+import { Calendar, Clock, Dumbbell, Home, LogOut, Play, Plus, Target, Trophy, User } from "lucide-react";
 import { useEffect, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 
@@ -166,6 +166,12 @@ const Index = () => {
             </div>
             
             <div className="flex items-center space-x-4">
+            <Link to="/">
+                <Button variant="outline" className="border-gray-700 text-gray-300 hover:bg-gray-800">
+                  <Home className="w-4 h-4 mr-2" />
+                  Home
+                </Button>
+              </Link>
               <Link to="/workouts">
                 <Button variant="outline" className="border-gray-700 text-gray-300 hover:bg-gray-800">
                   <Dumbbell className="w-4 h-4 mr-2" />
