@@ -17,6 +17,10 @@ interface Exercise {
   video_url: string | null;
   execution_notes: string | null;
   exercise_order: number | null;
+  warmup_sets: string | null;
+  prep_sets: string | null;
+  working_sets: string | null;
+  working_reps: string | null;
 }
 
 interface WorkoutDay {
