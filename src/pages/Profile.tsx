@@ -1,17 +1,17 @@
-
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
+import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Navigate } from 'react-router-dom';
-import { User, Weight, Ruler, Calendar, Target, TrendingUp, LogOut } from 'lucide-react';
-import { useForm } from 'react-hook-form';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Calendar, Ruler, Target, TrendingUp, User, Weight } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { Navigate } from 'react-router-dom';
 import * as z from 'zod';
 
 const profileSchema = z.object({
@@ -37,7 +37,7 @@ interface Profile {
 }
 
 export default function Profile() {
-  const { user, signOut, loading: authLoading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -56,16 +56,16 @@ export default function Profile() {
   const watchGoal = watch('goal');
   const watchExperience = watch('experience_level');
 
-  // Redirect if not authenticated
-  if (!user && !authLoading) {
-    return <Navigate to="/auth" replace />;
-  }
-
   useEffect(() => {
     if (user) {
       fetchProfile();
     }
   }, [user]);
+
+  // Redirect if not authenticated
+  if (!user && !authLoading) {
+    return <Navigate to="/auth" replace />;
+  }
 
   const fetchProfile = async () => {
     try {
@@ -128,19 +128,16 @@ export default function Profile() {
       });
 
       fetchProfile(); // Refresh profile data
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Erro ao salvar perfil";
       toast({
         title: "Erro",
-        description: error.message || "Erro ao salvar perfil",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
       setSaving(false);
     }
-  };
-
-  const handleSignOut = async () => {
-    await signOut();
   };
 
   if (authLoading || loading) {
@@ -152,21 +149,16 @@ export default function Profile() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-fitness-dark via-gray-900 to-black p-4">
-      <div className="max-w-2xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-white mb-2">Meu Perfil</h1>
-            <p className="text-gray-400">Gerencie seus dados pessoais</p>
-          </div>
-          <Button
-            variant="outline"
-            onClick={handleSignOut}
-            className="border-gray-700 text-gray-300 hover:bg-gray-800"
-          >
-            <LogOut className="w-4 h-4 mr-2" />
-            Sair
-          </Button>
+    <div className="min-h-screen bg-gradient-to-br from-fitness-dark via-gray-900 to-black">
+      <Header 
+        title="Gym Buddy"
+        subtitle="Perfil do Usuário"
+      />
+
+      <div className="max-w-2xl mx-auto p-4">
+        <div className="mb-8 mt-6">
+          <h2 className="text-3xl font-bold text-white mb-2">Meu Perfil</h2>
+          <p className="text-gray-400">Gerencie seus dados pessoais</p>
         </div>
 
         <Card className="glass-card border-gray-800">
@@ -198,16 +190,19 @@ export default function Profile() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-gray-300">
+                  <Label className="text-gray-300 flex items-center gap-2">
+                    <Calendar className="w-4 h-4" />
                     Email
                   </Label>
                   <Input
-                    value={profile?.email || ''}
+                    value={user?.email || ''}
                     disabled
                     className="bg-gray-800/30 border-gray-700 text-gray-400"
                   />
                 </div>
+              </div>
 
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="weight" className="text-gray-300 flex items-center gap-2">
                     <Weight className="w-4 h-4" />
@@ -218,7 +213,7 @@ export default function Profile() {
                     type="number"
                     step="0.1"
                     className="bg-gray-800/50 border-gray-700 text-white"
-                    placeholder="Ex: 70.5"
+                    placeholder="70.5"
                   />
                 </div>
 
@@ -231,7 +226,7 @@ export default function Profile() {
                     {...register('height')}
                     type="number"
                     className="bg-gray-800/50 border-gray-700 text-white"
-                    placeholder="Ex: 175"
+                    placeholder="175"
                   />
                 </div>
 
@@ -244,10 +239,12 @@ export default function Profile() {
                     {...register('age')}
                     type="number"
                     className="bg-gray-800/50 border-gray-700 text-white"
-                    placeholder="Ex: 25"
+                    placeholder="25"
                   />
                 </div>
+              </div>
 
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-gray-300 flex items-center gap-2">
                     <Target className="w-4 h-4" />
@@ -258,15 +255,16 @@ export default function Profile() {
                       <SelectValue placeholder="Selecione seu objetivo" />
                     </SelectTrigger>
                     <SelectContent className="bg-gray-800 border-gray-700">
-                      <SelectItem value="hipertrofia" className="text-white">Hipertrofia</SelectItem>
-                      <SelectItem value="força" className="text-white">Força</SelectItem>
-                      <SelectItem value="resistencia" className="text-white">Resistência</SelectItem>
-                      <SelectItem value="perda_peso" className="text-white">Perda de Peso</SelectItem>
+                      <SelectItem value="muscle_gain">Ganhar Massa Muscular</SelectItem>
+                      <SelectItem value="weight_loss">Perder Peso</SelectItem>
+                      <SelectItem value="strength">Aumentar Força</SelectItem>
+                      <SelectItem value="endurance">Melhorar Resistência</SelectItem>
+                      <SelectItem value="maintenance">Manutenção</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
-                <div className="space-y-2 md:col-span-2">
+                <div className="space-y-2">
                   <Label className="text-gray-300 flex items-center gap-2">
                     <TrendingUp className="w-4 h-4" />
                     Nível de Experiência
@@ -276,21 +274,23 @@ export default function Profile() {
                       <SelectValue placeholder="Selecione seu nível" />
                     </SelectTrigger>
                     <SelectContent className="bg-gray-800 border-gray-700">
-                      <SelectItem value="iniciante" className="text-white">Iniciante</SelectItem>
-                      <SelectItem value="intermediario" className="text-white">Intermediário</SelectItem>
-                      <SelectItem value="avancado" className="text-white">Avançado</SelectItem>
+                      <SelectItem value="beginner">Iniciante (0-1 ano)</SelectItem>
+                      <SelectItem value="intermediate">Intermediário (1-3 anos)</SelectItem>
+                      <SelectItem value="advanced">Avançado (3+ anos)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
 
-              <Button 
-                type="submit" 
-                className="w-full bg-fitness-primary hover:bg-fitness-primary/90"
-                disabled={saving}
-              >
-                {saving ? 'Salvando...' : 'Salvar Alterações'}
-              </Button>
+              <div className="flex justify-end pt-6">
+                <Button
+                  type="submit"
+                  disabled={saving}
+                  className="bg-fitness-primary hover:bg-fitness-primary/90"
+                >
+                  {saving ? 'Salvando...' : 'Salvar Alterações'}
+                </Button>
+              </div>
             </form>
           </CardContent>
         </Card>

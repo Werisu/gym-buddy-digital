@@ -1,0 +1,45 @@
+# Exemplo de Arquivo para Importação de Exercícios
+
+## Formato 1 - Tabela (separado por |)
+## Nome | Aquecimento | Preparatórias | Séries Valendo | Repetições Valendo
+
+Tríceps Barra V de Costas | 2x10 | 2x 2-7 | 2x 8-10 | 8-10
+Tríceps Polia Alta Caneleira | - | 1x 2-7 | 2x 8-10 | 8-10  
+Posterior 45 Graus | 1x10 | 1x 2-7 | 2x 8-10 | 8-10
+Puxada Pronada Polia Média | - | 2x 2-7 | 2x 8-10 | 8-10
+Puxada Unilateral Variação | - | 1x 2-7 | 3x 8-10 | 8-10
+Remada Pronada Máquina | - | 1x 2-7 | 2x 8-10 | 8-10
+
+## Formato 2 - Estruturado (com labels)
+
+Exercício: Supino Reto
+Aquecimento: 2x12
+Preparatórias: 2x 3-5
+Valendo: 3x 6-8
+Repetições: 6-8
+
+Exercício: Supino Inclinado
+Aquecimento: 1x15
+Preparatórias: 1x 3-5
+Valendo: 3x 8-10
+Repetições: 8-10
+
+Exercício: Crucifixo
+Aquecimento: -
+Preparatórias: 1x 5-7
+Valendo: 2x 10-12
+Repetições: 10-12
+
+## Formato 3 - Simples (nome + séries)
+
+Leg Press
+4x 12-15
+
+Cadeira Extensora
+3x 15-20
+
+Cadeira Flexora
+3x 12-15
+
+Panturrilha em Pé
+4x 15-20 

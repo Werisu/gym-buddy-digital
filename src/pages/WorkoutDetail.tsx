@@ -1,16 +1,16 @@
-
-import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
+import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Plus, Calendar, Dumbbell } from 'lucide-react';
+import { CreateExerciseDialog } from '@/components/workouts/CreateExerciseDialog';
 import { CreateWorkoutDayDialog } from '@/components/workouts/CreateWorkoutDayDialog';
 import { WorkoutDayCard } from '@/components/workouts/WorkoutDayCard';
-import { CreateExerciseDialog } from '@/components/workouts/CreateExerciseDialog';
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { Calendar, Plus } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 
 interface WorkoutRoutine {
   id: string;
@@ -39,6 +39,10 @@ interface Exercise {
   video_url: string | null;
   execution_notes: string | null;
   exercise_order: number | null;
+  warmup_sets: string | null;
+  prep_sets: string | null;
+  working_sets: string | null;
+  working_reps: string | null;
 }
 
 export default function WorkoutDetail() {
@@ -94,7 +98,7 @@ export default function WorkoutDetail() {
       if (exercisesError) throw exercisesError;
       setExercises(exercisesData || []);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Erro",
         description: "Erro ao carregar dados da rotina",
@@ -132,10 +136,11 @@ export default function WorkoutDetail() {
         title: "Sucesso!",
         description: "Dia de treino criado com sucesso",
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Erro ao criar dia de treino";
       toast({
         title: "Erro",
-        description: error.message || "Erro ao criar dia de treino",
+        description: errorMessage,
         variant: "destructive"
       });
     }
@@ -159,10 +164,38 @@ export default function WorkoutDetail() {
         title: "Sucesso!",
         description: "Exercício adicionado com sucesso",
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Erro ao adicionar exercício";
       toast({
         title: "Erro",
-        description: error.message || "Erro ao adicionar exercício",
+        description: errorMessage,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleBulkCreateExercises = async (exercisesData: Array<Omit<Exercise, 'id'>>) => {
+    try {
+      const { data, error } = await supabase
+        .from('exercises')
+        .insert(exercisesData)
+        .select();
+
+      if (error) throw error;
+
+      setExercises(prev => [...prev, ...data]);
+      setShowCreateExerciseDialog(false);
+      setSelectedWorkoutDayId(null);
+      
+      toast({
+        title: "Sucesso!",
+        description: `${exercisesData.length} exercícios importados com sucesso`,
+      });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Erro ao importar exercícios";
+      toast({
+        title: "Erro",
+        description: errorMessage,
         variant: "destructive"
       });
     }
@@ -187,40 +220,40 @@ export default function WorkoutDetail() {
 
   if (!routine) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-fitness-dark via-gray-900 to-black flex items-center justify-center">
-        <Card className="glass-card border-gray-800">
-          <CardContent className="p-8 text-center">
-            <h3 className="text-xl font-semibold text-white mb-2">
-              Rotina não encontrada
-            </h3>
-            <Link to="/workouts">
-              <Button variant="outline" className="border-gray-700 text-gray-300">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Voltar às Rotinas
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen bg-gradient-to-br from-fitness-dark via-gray-900 to-black">
+        <Header 
+          title="Gym Buddy"
+          subtitle="Rotina não encontrada"
+        />
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <Card className="glass-card border-gray-800">
+            <CardContent className="p-8 text-center">
+              <h3 className="text-xl font-semibold text-white mb-2">
+                Rotina não encontrada
+              </h3>
+              <p className="text-gray-400 mb-4">
+                A rotina que você está procurando não existe ou foi removida.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-fitness-dark via-gray-900 to-black p-4">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex items-center gap-4 mb-6">
-          <Link to="/workouts">
-            <Button variant="outline" size="sm" className="border-gray-700 text-gray-300">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Voltar
-            </Button>
-          </Link>
-          <div>
-            <h1 className="text-3xl font-bold text-white">{routine.name}</h1>
-            {routine.description && (
-              <p className="text-gray-400 mt-1">{routine.description}</p>
-            )}
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-fitness-dark via-gray-900 to-black">
+      <Header 
+        title="Gym Buddy"
+        subtitle={routine.name}
+      />
+
+      <div className="max-w-6xl mx-auto p-4">
+        <div className="mb-8 mt-6">
+          <h2 className="text-3xl font-bold text-white mb-2">{routine.name}</h2>
+          {routine.description && (
+            <p className="text-gray-400">{routine.description}</p>
+          )}
         </div>
 
         <Tabs value={currentWeek.toString()} onValueChange={(value) => setCurrentWeek(parseInt(value))}>
@@ -301,6 +334,7 @@ export default function WorkoutDetail() {
             if (!open) setSelectedWorkoutDayId(null);
           }}
           onCreateExercise={handleCreateExercise}
+          onBulkCreateExercises={handleBulkCreateExercises}
           workoutDayId={selectedWorkoutDayId}
         />
       </div>
