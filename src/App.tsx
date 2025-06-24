@@ -10,6 +10,7 @@ import NotFound from "./pages/NotFound";
 import Profile from "./pages/Profile";
 import QuickWorkout from "./pages/QuickWorkout";
 import WorkoutDetail from "./pages/WorkoutDetail";
+import WorkoutHistory from "./pages/WorkoutHistory";
 import Workouts from "./pages/Workouts";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/workouts" element={<Workouts />} />
             <Route path="/workouts/:routineId" element={<WorkoutDetail />} />
             <Route path="/quick-workout" element={<QuickWorkout />} />
+            <Route path="/workout-history" element={<WorkoutHistory />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

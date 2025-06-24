@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { Calendar, Clock, Dumbbell, Play, Plus, Target, Trophy, User } from "lucide-react";
+import { Calendar, Clock, Dumbbell, History, Play, Plus, Target, Trophy, User } from "lucide-react";
 import { useCallback, useEffect, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 
@@ -473,6 +473,16 @@ const Index = () => {
                 <p className="text-gray-400 text-sm">Exercícios Cadastrados</p>
               </CardContent>
             </Card>
+            
+            <Link to="/workout-history">
+              <Card className="glass-card border-gray-800 hover:border-fitness-primary/50 transition-colors cursor-pointer">
+                <CardContent className="p-6 text-center">
+                  <History className="w-8 h-8 text-fitness-primary mx-auto mb-3" />
+                  <h4 className="text-white font-semibold mb-1">Histórico</h4>
+                  <p className="text-gray-400 text-sm">Ver Treinos Passados</p>
+                </CardContent>
+              </Card>
+            </Link>
             
             <Link to="/profile">
               <Card className="glass-card border-gray-800 hover:border-fitness-primary/50 transition-colors cursor-pointer">
