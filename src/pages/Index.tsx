@@ -129,8 +129,13 @@ const Index = () => {
       console.log('Fim da semana:', endOfWeek.toISOString().split('T')[0]);
 
       const thisWeekWorkouts = workoutHistory?.filter(w => {
-        const workoutDate = new Date(w.workout_date);
-        return workoutDate >= startOfWeek && workoutDate <= endOfWeek;
+        // Usar comparação de strings para evitar problemas de fuso horário
+        const workoutDateStr = w.workout_date;
+        const startOfWeekStr = startOfWeek.toISOString().split('T')[0];
+        const endOfWeekStr = endOfWeek.toISOString().split('T')[0];
+        const isInRange = workoutDateStr >= startOfWeekStr && workoutDateStr <= endOfWeekStr;
+        console.log(`Treino ${workoutDateStr}: startOfWeek=${startOfWeekStr}, endOfWeek=${endOfWeekStr}, isInRange=${isInRange}`);
+        return isInRange;
       }) || [];
 
       console.log('Treinos desta semana (total):', thisWeekWorkouts.length);
