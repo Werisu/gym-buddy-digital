@@ -75,6 +75,7 @@ export default function QuickWorkout() {
   const [restTimeLeft, setRestTimeLeft] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [workoutStartTime, setWorkoutStartTime] = useState<Date | null>(null);
+  const [workoutStartDate, setWorkoutStartDate] = useState<string | null>(null);
   const [workoutDuration, setWorkoutDuration] = useState(0);
 
   useEffect(() => {
@@ -166,6 +167,7 @@ export default function QuickWorkout() {
     
     setIsWorkoutStarted(true);
     setWorkoutStartTime(new Date());
+    setWorkoutStartDate(new Date().toISOString().split('T')[0]);
     setExerciseProgress(
       exercises.map(ex => ({
         exerciseId: ex.id,
@@ -231,7 +233,7 @@ export default function QuickWorkout() {
   };
 
   const saveWorkoutToHistory = async () => {
-    if (!user || !selectedDay || !selectedRoutine) return;
+    if (!user || !selectedDay || !selectedRoutine || !workoutStartDate) return;
 
     try {
       const completedExercises = exerciseProgress.filter(p => p.isCompleted).length;
@@ -240,8 +242,8 @@ export default function QuickWorkout() {
       const workoutHistoryData = {
         user_id: user.id,
         workout_name: selectedDay.day_name,
-        workout_date: new Date().toISOString().split('T')[0], // Data atual
-        duration_minutes: Math.round(workoutDuration / 60), // Converter segundos para minutos
+        workout_date: workoutStartDate,
+        duration_minutes: Math.round(workoutDuration / 60),
         exercises_completed: completedExercises,
         total_exercises: totalExercises
       };

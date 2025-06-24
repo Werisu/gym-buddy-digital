@@ -66,11 +66,12 @@ export function WorkoutExecution({
   const { toast } = useToast();
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
   const [exerciseProgress, setExerciseProgress] = useState<ExerciseProgress[]>([]);
+  const [workoutDuration, setWorkoutDuration] = useState(0);
+  const [workoutStartDate, setWorkoutStartDate] = useState<string | null>(null);
+  const [workoutStartTime, setWorkoutStartTime] = useState<Date | null>(null);
   const [isResting, setIsResting] = useState(false);
   const [restTimeLeft, setRestTimeLeft] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
-  const [workoutStartTime, setWorkoutStartTime] = useState<Date | null>(null);
-  const [workoutDuration, setWorkoutDuration] = useState(0);
   
   const restTimerRef = useRef<NodeJS.Timeout | null>(null);
   const workoutTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -81,6 +82,7 @@ export function WorkoutExecution({
 
   useEffect(() => {
     if (open) {
+      setWorkoutStartDate(new Date().toISOString().split('T')[0]);
       setWorkoutStartTime(new Date());
       setExerciseProgress(
         sortedExercises.map(ex => ({
@@ -180,7 +182,7 @@ export function WorkoutExecution({
   };
 
   const saveWorkoutToHistory = async () => {
-    if (!user || !workoutDay) return;
+    if (!user || !workoutDay || !workoutStartDate) return;
 
     try {
       const completedExercises = exerciseProgress.filter(p => p.isCompleted).length;
@@ -189,8 +191,8 @@ export function WorkoutExecution({
       const workoutHistoryData = {
         user_id: user.id,
         workout_name: workoutDay.day_name,
-        workout_date: new Date().toISOString().split('T')[0], // Data atual
-        duration_minutes: Math.round(workoutDuration / 60), // Converter segundos para minutos
+        workout_date: workoutStartDate,
+        duration_minutes: Math.round(workoutDuration / 60),
         exercises_completed: completedExercises,
         total_exercises: totalExercises
       };
