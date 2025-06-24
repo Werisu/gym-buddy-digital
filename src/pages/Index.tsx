@@ -124,18 +124,43 @@ const Index = () => {
       endOfWeek.setDate(startOfWeek.getDate() + 6);
       endOfWeek.setHours(23, 59, 59, 999);
 
+      console.log('=== DEBUG PROGRESSO SEMANAL ===');
+      console.log('Início da semana:', startOfWeek.toISOString().split('T')[0]);
+      console.log('Fim da semana:', endOfWeek.toISOString().split('T')[0]);
+
       const thisWeekWorkouts = workoutHistory?.filter(w => {
         const workoutDate = new Date(w.workout_date);
         return workoutDate >= startOfWeek && workoutDate <= endOfWeek;
       }) || [];
 
-      // Calcular total de treinos planejados para esta semana
-      const plannedWorkoutsThisWeek = activeRoutine ? 
-        workoutDays?.filter(d => 
+      console.log('Treinos desta semana (total):', thisWeekWorkouts.length);
+      console.log('Detalhes dos treinos:', thisWeekWorkouts.map(w => `${w.workout_date} - ${w.workout_name}`));
+
+      // Contar DIAS ÚNICOS com treino nesta semana (não treinos individuais)
+      const uniqueWorkoutDaysThisWeek = [...new Set(thisWeekWorkouts.map(w => w.workout_date))];
+      console.log('Dias únicos com treino:', uniqueWorkoutDaysThisWeek);
+      console.log('Total de dias com treino:', uniqueWorkoutDaysThisWeek.length);
+
+      // Calcular total de dias de treino planejados para esta semana baseado na rotina ativa
+      let plannedWorkoutDaysThisWeek = 0;
+      if (activeRoutine) {
+        // Buscar todos os dias de treino da rotina ativa (não apenas semana 1)
+        const activeDays = workoutDays?.filter(d => 
           d.routine_id === activeRoutine.id && 
-          d.week_number === 1 && 
           !d.is_rest_day
-        ).length || 0 : 0;
+        ) || [];
+        
+        console.log('Dias de treino na rotina ativa:', activeDays.map(d => `${d.day_name} (Dia ${d.day_number})`));
+        
+        // Contar quantos dias de treino únicos existem (baseado no day_number, não duplicatas)
+        const uniqueTrainingDays = [...new Set(activeDays.map(d => d.day_number))];
+        plannedWorkoutDaysThisWeek = uniqueTrainingDays.length;
+        
+        console.log('Dias únicos de treino planejados:', uniqueTrainingDays);
+        console.log('Total de dias de treino planejados por semana:', plannedWorkoutDaysThisWeek);
+      }
+
+      console.log('=== FIM DEBUG PROGRESSO SEMANAL ===');
 
       // Calcular sequência atual (dias consecutivos com treino)
       let currentStreak = 0;
@@ -205,9 +230,9 @@ const Index = () => {
         totalWorkoutDays: workoutDays?.length || 0,
         nextWorkout,
         weeklyProgress: {
-          completed: thisWeekWorkouts.length,
-          total: plannedWorkoutsThisWeek,
-          percentage: plannedWorkoutsThisWeek > 0 ? (thisWeekWorkouts.length / plannedWorkoutsThisWeek) * 100 : 0
+          completed: uniqueWorkoutDaysThisWeek.length,
+          total: plannedWorkoutDaysThisWeek,
+          percentage: plannedWorkoutDaysThisWeek > 0 ? (uniqueWorkoutDaysThisWeek.length / plannedWorkoutDaysThisWeek) * 100 : 0
         },
         recentActivity: {
           streak: currentStreak,
