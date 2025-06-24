@@ -113,22 +113,45 @@ export default function Profile() {
       }
 
       const file = event.target.files[0];
-      const fileExt = file.name.split('.').pop();
-      const filePath = `avatars/${user?.id}-${Math.random()}.${fileExt}`;
+      
+      // Validar tipo e tamanho do arquivo
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+      if (!allowedTypes.includes(file.type)) {
+        throw new Error('Tipo de arquivo não suportado. Use JPG, PNG ou GIF.');
+      }
 
-      // Upload para o Supabase Storage
-      const { error: uploadError } = await supabase.storage
+      if (file.size > 5 * 1024 * 1024) { // 5MB
+        throw new Error('Arquivo muito grande. Máximo 5MB.');
+      }
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `avatar-${Date.now()}.${fileExt}`;
+      // Estrutura baseada no artigo oficial: user_id/filename
+      const filePath = `${user?.id}/${fileName}`;
+
+      console.log('Iniciando upload:', { fileName, filePath, fileSize: file.size, fileType: file.type, userId: user?.id });
+
+      // Upload direto - sem verificar buckets (conforme artigo)
+      const { data: uploadData, error: uploadError } = await supabase.storage
         .from('profiles')
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
 
       if (uploadError) {
-        throw uploadError;
+        console.error('Erro no upload:', uploadError);
+        throw new Error(`Erro no upload: ${uploadError.message}`);
       }
+
+      console.log('Upload realizado com sucesso:', uploadData);
 
       // Obter URL pública da imagem
       const { data: urlData } = supabase.storage
         .from('profiles')
         .getPublicUrl(filePath);
+
+      console.log('URL pública gerada:', urlData.publicUrl);
 
       // Atualizar perfil com a nova URL do avatar
       const { error: updateError } = await supabase
@@ -137,7 +160,8 @@ export default function Profile() {
         .eq('id', user?.id);
 
       if (updateError) {
-        throw updateError;
+        console.error('Erro ao atualizar perfil:', updateError);
+        throw new Error(`Erro ao salvar no perfil: ${updateError.message}`);
       }
 
       // Atualizar estado local
@@ -149,6 +173,7 @@ export default function Profile() {
       });
 
     } catch (error: unknown) {
+      console.error('Erro completo no upload:', error);
       const errorMessage = error instanceof Error ? error.message : "Erro ao fazer upload da imagem";
       toast({
         title: "Erro",
@@ -157,6 +182,10 @@ export default function Profile() {
       });
     } finally {
       setUploading(false);
+      // Limpar o input file
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
