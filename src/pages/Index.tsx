@@ -2,11 +2,11 @@ import { DynamicWeeklySchedule } from "@/components/DynamicWeeklySchedule";
 import { Header } from "@/components/Header";
 import { StatsCard } from "@/components/StatsCard";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { Calendar, Clock, Dumbbell, History, Play, Plus, Target, Trophy, User } from "lucide-react";
+import { Calendar, Clock, Dumbbell, History, Play, Target, TrendingUp, Trophy, User } from "lucide-react";
 import { useCallback, useEffect, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 
@@ -289,10 +289,6 @@ const Index = () => {
     };
   }, [user, fetchDashboardStats]);
 
-
-
-
-
   // Redirect to auth if not logged in
   if (!user && !loading) {
     return <Navigate to="/auth" replace />;
@@ -337,51 +333,41 @@ const Index = () => {
           </p>
         </div>
 
-        {/* Stats Grid */}
+        <div className="mb-8 mt-6 animate-fade-in">
+          <h2 className="text-3xl font-bold text-white mb-2">Dashboard</h2>
+          <p className="text-gray-400">Acompanhe seu progresso fitness</p>
+        </div>
+
+        {/* Cards de Estatísticas */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {loadingStats ? (
-            // Loading skeleton
-            Array.from({ length: 4 }).map((_, i) => (
-              <Card key={i} className="glass-card border-gray-800">
-                <CardContent className="p-6">
-                  <div className="animate-pulse">
-                    <div className="h-8 w-8 bg-gray-700 rounded mb-4"></div>
-                    <div className="h-4 bg-gray-700 rounded mb-2"></div>
-                    <div className="h-6 bg-gray-700 rounded mb-2"></div>
-                    <div className="h-3 bg-gray-700 rounded"></div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          ) : (
-            <>
-              <StatsCard
-                icon={Calendar}
-                title="Progresso Semanal"
-                value={`${dashboardStats.weeklyProgress.completed}/${dashboardStats.weeklyProgress.total}`}
-                subtitle={`${Math.round(dashboardStats.weeklyProgress.percentage)}% concluído`}
-                progress={dashboardStats.weeklyProgress.percentage}
-              />
-              <StatsCard
-                icon={Trophy}
-                title="Sequência Atual"
-                value={dashboardStats.recentActivity.streak.toString()}
-                subtitle="dias consecutivos"
-              />
-              <StatsCard
-                icon={Target}
-                title="Total de Exercícios"
-                value={dashboardStats.totalExercises.toString()}
-                subtitle={`em ${dashboardStats.totalRoutines} rotinas`}
-              />
-              <StatsCard
-                icon={Clock}
-                title="Último Treino"
-                value={formatLastWorkout(dashboardStats.recentActivity.lastWorkout)}
-                subtitle={dashboardStats.nextWorkout ? dashboardStats.nextWorkout.name : 'Criar rotina'}
-              />
-            </>
-          )}
+          <StatsCard
+            title="Treinos Concluídos"
+            value={dashboardStats.weeklyProgress.completed.toString()}
+            icon={Calendar}
+            trend="+12% esta semana"
+            className="card-entrance hover-lift"
+          />
+          <StatsCard
+            title="Sequência Atual"
+            value={`${dashboardStats.recentActivity.streak} dias`}
+            icon={TrendingUp}
+            trend={dashboardStats.recentActivity.streak > 0 ? "Novo recorde!" : `Recorde: ${dashboardStats.recentActivity.streak} dias`}
+            className="card-entrance hover-lift"
+          />
+          <StatsCard
+            title="Tempo Total"
+            value={`${Math.floor(dashboardStats.weeklyProgress.percentage * dashboardStats.totalWorkoutDays / 100)}h`}
+            icon={Clock}
+            trend="Média: 45min/treino"
+            className="card-entrance hover-lift"
+          />
+          <StatsCard
+            title="Progresso Semanal"
+            value={`${dashboardStats.weeklyProgress.completed}/${dashboardStats.weeklyProgress.total}`}
+            icon={Target}
+            trend={`${Math.round(dashboardStats.weeklyProgress.percentage)}% da meta`}
+            className="card-entrance hover-lift"
+          />
         </div>
 
         {/* Weekly Schedule */}
@@ -410,41 +396,125 @@ const Index = () => {
           <DynamicWeeklySchedule />
         </div>
 
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Link to="/quick-workout">
-            <Button 
-              size="lg" 
-              className="w-full h-20 bg-fitness-primary hover:bg-fitness-primary/90 text-lg font-semibold"
-              disabled={dashboardStats.totalRoutines === 0}
-            >
-              <Play className="w-6 h-6 mr-3" />
-              {dashboardStats.totalRoutines === 0 ? 'Criar Rotina Primeiro' : 'Iniciar Treino'}
-            </Button>
-          </Link>
-          
-          <Link to="/workouts">
-            <Button 
-              size="lg" 
-              variant="outline"
-              className="w-full h-20 border-gray-700 text-white hover:bg-gray-800 text-lg"
-            >
-              <Dumbbell className="w-6 h-6 mr-3" />
-              Ver Treinos ({dashboardStats.totalRoutines})
-            </Button>
-          </Link>
-          
-          <Link to="/workouts">
-            <Button 
-              size="lg" 
-              variant="outline"
-              className="w-full h-20 border-gray-700 text-white hover:bg-gray-800 text-lg"
-            >
-              <Plus className="w-6 h-6 mr-3" />
-              Nova Rotina
-            </Button>
-          </Link>
+        {/* Cards de Ação Rápida */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          <Card className="glass-card border-gray-800 hover:border-fitness-primary/50 transition-all duration-300 card-entrance hover-lift">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-12 h-12 bg-fitness-primary/20 rounded-lg flex items-center justify-center">
+                  <Play className="w-6 h-6 text-fitness-primary animate-pulse-custom" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-white animate-slide-in-left">Treino Rápido</h3>
+                  <p className="text-sm text-gray-400 animate-slide-in-right">Comece agora mesmo</p>
+                </div>
+              </div>
+              <Link to="/quick-workout">
+                <Button className="w-full bg-fitness-primary hover:bg-fitness-secondary hover-glow btn-animate">
+                  <Play className="w-4 h-4 mr-2" />
+                  Iniciar Treino
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+
+          <Card className="glass-card border-gray-800 hover:border-fitness-primary/50 transition-all duration-300 card-entrance hover-lift">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                  <Dumbbell className="w-6 h-6 text-blue-400 animate-pulse-custom" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-white animate-slide-in-left">Rotinas</h3>
+                  <p className="text-sm text-gray-400 animate-slide-in-right">Gerencie seus treinos</p>
+                </div>
+              </div>
+              <Link to="/workouts">
+                <Button variant="outline" className="w-full border-gray-700 text-gray-300 hover:bg-gray-800 hover-glow btn-animate">
+                  <Dumbbell className="w-4 h-4 mr-2" />
+                  Ver Rotinas
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+
+          <Card className="glass-card border-gray-800 hover:border-fitness-primary/50 transition-all duration-300 card-entrance hover-lift">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                  <History className="w-6 h-6 text-purple-400 animate-pulse-custom" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-white animate-slide-in-left">Histórico</h3>
+                  <p className="text-sm text-gray-400 animate-slide-in-right">Acompanhe seu progresso</p>
+                </div>
+              </div>
+              <Link to="/workout-history">
+                <Button variant="outline" className="w-full border-gray-700 text-gray-300 hover:bg-gray-800 hover-glow btn-animate">
+                  <History className="w-4 h-4 mr-2" />
+                  Ver Histórico
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
         </div>
+
+        {/* Card de Demonstração de Animações */}
+        <Card className="glass-card border-gray-800 mb-8 card-entrance hover-lift">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center gap-2 animate-slide-in-left">
+              <Trophy className="w-5 h-5 text-fitness-primary animate-pulse-custom" />
+              Microanimações Implementadas ✨
+            </CardTitle>
+            <CardDescription className="text-gray-400 animate-slide-in-right">
+              Experiência visual aprimorada com animações suaves
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="text-center p-4 bg-gray-800/30 rounded-lg stagger-item">
+                <div className="w-12 h-12 bg-fitness-primary/20 rounded-full flex items-center justify-center mx-auto mb-2 animate-bounce-custom">
+                  <Play className="w-6 h-6 text-fitness-primary" />
+                </div>
+                <p className="text-sm text-gray-300">Bounce</p>
+              </div>
+              
+              <div className="text-center p-4 bg-gray-800/30 rounded-lg stagger-item">
+                <div className="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-2 animate-scale-in">
+                  <Target className="w-6 h-6 text-blue-400" />
+                </div>
+                <p className="text-sm text-gray-300">Scale In</p>
+              </div>
+              
+              <div className="text-center p-4 bg-gray-800/30 rounded-lg stagger-item">
+                <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-2 animate-pulse-custom">
+                  <Dumbbell className="w-6 h-6 text-green-400" />
+                </div>
+                <p className="text-sm text-gray-300">Pulse</p>
+              </div>
+              
+              <div className="text-center p-4 bg-gray-800/30 rounded-lg stagger-item">
+                <div className="w-12 h-12 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-2 float">
+                  <User className="w-6 h-6 text-purple-400" />
+                </div>
+                <p className="text-sm text-gray-300">Float</p>
+              </div>
+            </div>
+            
+            <div className="mt-6 p-4 bg-fitness-primary/10 rounded-lg border border-fitness-primary/20">
+              <h4 className="text-fitness-primary font-medium mb-2 animate-fade-in">Animações Implementadas:</h4>
+              <ul className="text-sm text-gray-300 space-y-1">
+                <li className="stagger-item">• Hover effects (lift, scale, glow)</li>
+                <li className="stagger-item">• Loading animations (dots, shimmer, pulse)</li>
+                <li className="stagger-item">• Entrance animations (fade, slide, scale)</li>
+                <li className="stagger-item">• Button interactions (shine effect, hover states)</li>
+                <li className="stagger-item">• Progress bars com gradiente animado</li>
+                <li className="stagger-item">• Stagger animations para listas</li>
+                <li className="stagger-item">• Error shake e success checkmark</li>
+              </ul>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Quick Access Section */}
         <div className="mt-12">

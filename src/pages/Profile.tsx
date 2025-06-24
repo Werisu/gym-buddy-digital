@@ -244,44 +244,44 @@ export default function Profile() {
       />
 
       <div className="max-w-2xl mx-auto p-4">
-        <div className="mb-8 mt-6">
+        <div className="mb-8 mt-6 animate-fade-in">
           <h2 className="text-3xl font-bold text-white mb-2">Meu Perfil</h2>
           <p className="text-gray-400">Gerencie seus dados pessoais</p>
         </div>
 
         {/* Avatar Section */}
-        <Card className="glass-card border-gray-800 mb-6">
+        <Card className="glass-card border-gray-800 mb-6 card-entrance hover-lift">
           <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
-              <Camera className="w-5 h-5 text-fitness-primary" />
+            <CardTitle className="text-white flex items-center gap-2 animate-slide-in-left">
+              <Camera className="w-5 h-5 text-fitness-primary animate-pulse-custom" />
               Foto do Perfil
             </CardTitle>
-            <CardDescription className="text-gray-400">
+            <CardDescription className="text-gray-400 animate-slide-in-right">
               Adicione uma foto para personalizar seu perfil
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-6">
               <div className="relative">
-                <div className="w-24 h-24 rounded-full bg-gray-800 border-2 border-gray-700 flex items-center justify-center overflow-hidden">
+                <div className="w-24 h-24 rounded-full bg-gray-800 border-2 border-gray-700 flex items-center justify-center overflow-hidden hover-scale transition-all duration-300">
                   {profile?.avatar_url ? (
                     <img
                       src={profile.avatar_url}
                       alt="Avatar"
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover animate-scale-in"
                     />
                   ) : (
-                    <User className="w-12 h-12 text-gray-500" />
+                    <User className="w-12 h-12 text-gray-500 animate-pulse-custom" />
                   )}
                 </div>
                 {uploading && (
-                  <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
+                  <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center animate-fade-in">
                     <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-fitness-primary"></div>
                   </div>
                 )}
               </div>
               
-              <div className="flex-1">
+              <div className="flex-1 animate-slide-in-right">
                 <input
                   type="file"
                   ref={fileInputRef}
@@ -294,12 +294,20 @@ export default function Profile() {
                   variant="outline"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploading}
-                  className="border-gray-700 text-gray-300 hover:bg-gray-800"
+                  className="border-gray-700 text-gray-300 hover:bg-gray-800 hover-glow btn-animate"
                 >
                   <Upload className="w-4 h-4 mr-2" />
-                  {uploading ? 'Enviando...' : 'Alterar Foto'}
+                  {uploading ? (
+                    <span className="loading-dots">
+                      <span></span>
+                      <span></span>
+                      <span></span>
+                    </span>
+                  ) : (
+                    'Alterar Foto'
+                  )}
                 </Button>
-                <p className="text-sm text-gray-500 mt-2">
+                <p className="text-sm text-gray-500 mt-2 animate-fade-in">
                   JPG, PNG ou GIF. Máximo 5MB.
                 </p>
               </div>
@@ -307,50 +315,50 @@ export default function Profile() {
           </CardContent>
         </Card>
 
-        <Card className="glass-card border-gray-800">
+        <Card className="glass-card border-gray-800 card-entrance hover-lift">
           <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
-              <User className="w-5 h-5 text-fitness-primary" />
+            <CardTitle className="text-white flex items-center gap-2 animate-slide-in-left">
+              <User className="w-5 h-5 text-fitness-primary animate-pulse-custom" />
               Dados Pessoais
             </CardTitle>
-            <CardDescription className="text-gray-400">
+            <CardDescription className="text-gray-400 animate-slide-in-right">
               Mantenha suas informações atualizadas
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name" className="text-gray-300 flex items-center gap-2">
+                <div className="space-y-2 stagger-item">
+                  <Label htmlFor="name" className="text-gray-300 flex items-center gap-2 animate-slide-in-left">
                     <User className="w-4 h-4" />
                     Nome
                   </Label>
                   <Input
                     {...register('name')}
-                    className="bg-gray-800/50 border-gray-700 text-white"
+                    className="bg-gray-800/50 border-gray-700 text-white transition-all duration-300 focus:border-fitness-primary hover-glow"
                     placeholder="Seu nome completo"
                   />
                   {errors.name && (
-                    <p className="text-sm text-red-500">{errors.name.message}</p>
+                    <p className="text-sm text-red-500 animate-fade-in error-shake">{errors.name.message}</p>
                   )}
                 </div>
 
-                <div className="space-y-2">
-                  <Label className="text-gray-300 flex items-center gap-2">
+                <div className="space-y-2 stagger-item">
+                  <Label className="text-gray-300 flex items-center gap-2 animate-slide-in-right">
                     <Calendar className="w-4 h-4" />
                     Email
                   </Label>
                   <Input
                     value={user?.email || ''}
                     disabled
-                    className="bg-gray-800/30 border-gray-700 text-gray-400"
+                    className="bg-gray-800/30 border-gray-700 text-gray-400 cursor-not-allowed"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="weight" className="text-gray-300 flex items-center gap-2">
+                <div className="space-y-2 stagger-item">
+                  <Label htmlFor="weight" className="text-gray-300 flex items-center gap-2 animate-slide-in-left">
                     <Weight className="w-4 h-4" />
                     Peso (kg)
                   </Label>
@@ -358,82 +366,90 @@ export default function Profile() {
                     {...register('weight')}
                     type="number"
                     step="0.1"
-                    className="bg-gray-800/50 border-gray-700 text-white"
+                    className="bg-gray-800/50 border-gray-700 text-white transition-all duration-300 focus:border-fitness-primary hover-glow"
                     placeholder="70.5"
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="height" className="text-gray-300 flex items-center gap-2">
+                <div className="space-y-2 stagger-item">
+                  <Label htmlFor="height" className="text-gray-300 flex items-center gap-2 animate-fade-in">
                     <Ruler className="w-4 h-4" />
                     Altura (cm)
                   </Label>
                   <Input
                     {...register('height')}
                     type="number"
-                    className="bg-gray-800/50 border-gray-700 text-white"
+                    className="bg-gray-800/50 border-gray-700 text-white transition-all duration-300 focus:border-fitness-primary hover-glow"
                     placeholder="175"
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="age" className="text-gray-300 flex items-center gap-2">
+                <div className="space-y-2 stagger-item">
+                  <Label htmlFor="age" className="text-gray-300 flex items-center gap-2 animate-slide-in-right">
                     <Calendar className="w-4 h-4" />
                     Idade
                   </Label>
                   <Input
                     {...register('age')}
                     type="number"
-                    className="bg-gray-800/50 border-gray-700 text-white"
+                    className="bg-gray-800/50 border-gray-700 text-white transition-all duration-300 focus:border-fitness-primary hover-glow"
                     placeholder="25"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-gray-300 flex items-center gap-2">
+                <div className="space-y-2 stagger-item">
+                  <Label className="text-gray-300 flex items-center gap-2 animate-slide-in-left">
                     <Target className="w-4 h-4" />
                     Objetivo
                   </Label>
                   <Select value={watchGoal} onValueChange={(value) => setValue('goal', value)}>
-                    <SelectTrigger className="bg-gray-800/50 border-gray-700 text-white">
+                    <SelectTrigger className="bg-gray-800/50 border-gray-700 text-white transition-all duration-300 focus:border-fitness-primary hover-glow">
                       <SelectValue placeholder="Selecione seu objetivo" />
                     </SelectTrigger>
-                    <SelectContent className="bg-gray-800 border-gray-700">
-                      <SelectItem value="hipertrofia">Ganhar Massa Muscular</SelectItem>
-                      <SelectItem value="perda_peso">Perder Peso</SelectItem>
-                      <SelectItem value="força">Aumentar Força</SelectItem>
-                      <SelectItem value="resistencia">Melhorar Resistência</SelectItem>
+                    <SelectContent className="bg-gray-800 border-gray-700 animate-scale-in">
+                      <SelectItem value="hipertrofia" className="hover-scale">Ganhar Massa Muscular</SelectItem>
+                      <SelectItem value="perda_peso" className="hover-scale">Perder Peso</SelectItem>
+                      <SelectItem value="força" className="hover-scale">Aumentar Força</SelectItem>
+                      <SelectItem value="resistencia" className="hover-scale">Melhorar Resistência</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
-                <div className="space-y-2">
-                  <Label className="text-gray-300 flex items-center gap-2">
+                <div className="space-y-2 stagger-item">
+                  <Label className="text-gray-300 flex items-center gap-2 animate-slide-in-right">
                     <TrendingUp className="w-4 h-4" />
                     Nível de Experiência
                   </Label>
                   <Select value={watchExperience} onValueChange={(value) => setValue('experience_level', value)}>
-                    <SelectTrigger className="bg-gray-800/50 border-gray-700 text-white">
+                    <SelectTrigger className="bg-gray-800/50 border-gray-700 text-white transition-all duration-300 focus:border-fitness-primary hover-glow">
                       <SelectValue placeholder="Selecione seu nível" />
                     </SelectTrigger>
-                    <SelectContent className="bg-gray-800 border-gray-700">
-                      <SelectItem value="iniciante">Iniciante (0-1 ano)</SelectItem>
-                      <SelectItem value="intermediario">Intermediário (1-3 anos)</SelectItem>
-                      <SelectItem value="avancado">Avançado (3+ anos)</SelectItem>
+                    <SelectContent className="bg-gray-800 border-gray-700 animate-scale-in">
+                      <SelectItem value="iniciante" className="hover-scale">Iniciante (0-1 ano)</SelectItem>
+                      <SelectItem value="intermediario" className="hover-scale">Intermediário (1-3 anos)</SelectItem>
+                      <SelectItem value="avancado" className="hover-scale">Avançado (3+ anos)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
 
-              <div className="flex justify-end pt-6">
+              <div className="flex justify-end pt-6 animate-fade-in">
                 <Button
                   type="submit"
                   disabled={saving}
-                  className="bg-fitness-primary hover:bg-fitness-primary/90"
+                  className="bg-fitness-primary hover:bg-fitness-primary/90 hover-glow btn-animate success-checkmark"
                 >
-                  {saving ? 'Salvando...' : 'Salvar Alterações'}
+                  {saving ? (
+                    <span className="loading-dots">
+                      <span></span>
+                      <span></span>
+                      <span></span>
+                    </span>
+                  ) : (
+                    'Salvar Alterações'
+                  )}
                 </Button>
               </div>
             </form>

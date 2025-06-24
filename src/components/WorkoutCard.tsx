@@ -1,8 +1,7 @@
-
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Clock, Target, Play, Users } from "lucide-react";
+import { Clock, Play, Target, Users } from "lucide-react";
 
 interface WorkoutCardProps {
   title: string;
@@ -12,7 +11,14 @@ interface WorkoutCardProps {
   muscleGroups: string[];
   isToday?: boolean;
   onStart?: () => void;
+  className?: string;
 }
+
+const difficultyColors = {
+  'Iniciante': 'bg-green-500/20 text-green-400 border-green-500/30',
+  'Intermediário': 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
+  'Avançado': 'bg-red-500/20 text-red-400 border-red-500/30'
+};
 
 export const WorkoutCard = ({ 
   title, 
@@ -21,22 +27,25 @@ export const WorkoutCard = ({
   difficulty, 
   muscleGroups, 
   isToday = false,
-  onStart 
+  onStart,
+  className = ""
 }: WorkoutCardProps) => {
   return (
-    <Card className={`workout-card ${isToday ? 'border-fitness-primary/50 bg-gradient-to-br from-fitness-primary/5 to-fitness-secondary/5' : ''}`}>
-      <CardHeader>
+    <Card className={`glass-card border-gray-800 hover:border-fitness-primary/50 transition-all duration-300 hover-lift card-entrance ${className}`}>
+      <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
-          <div>
-            <CardTitle className="text-xl text-white mb-2">{title}</CardTitle>
+          <div className="space-y-1 animate-fade-in">
+            <CardTitle className="text-lg font-semibold text-white hover-scale">
+              {title}
+            </CardTitle>
             <div className="flex items-center gap-4 text-sm text-gray-400">
-              <div className="flex items-center gap-1">
-                <Clock className="w-4 h-4" />
-                {duration}
+              <div className="flex items-center gap-1 stagger-item">
+                <Clock className="w-4 h-4 text-fitness-primary" />
+                <span>{duration}</span>
               </div>
-              <div className="flex items-center gap-1">
-                <Target className="w-4 h-4" />
-                {exercises} exercícios
+              <div className="flex items-center gap-1 stagger-item">
+                <Target className="w-4 h-4 text-fitness-primary" />
+                <span>{exercises} exercícios</span>
               </div>
             </div>
           </div>
@@ -45,18 +54,16 @@ export const WorkoutCard = ({
               Hoje
             </Badge>
           )}
+          <Badge 
+            variant="outline" 
+            className={`${difficultyColors[difficulty]} animate-scale-in`}
+          >
+            {difficulty}
+          </Badge>
         </div>
       </CardHeader>
       
       <CardContent className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="border-gray-600 text-gray-300">
-              {difficulty}
-            </Badge>
-          </div>
-        </div>
-
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-sm text-gray-400">
             <Users className="w-4 h-4" />
@@ -77,12 +84,12 @@ export const WorkoutCard = ({
 
         {isToday && (
           <Button 
-            className="w-full btn-primary mt-4" 
+            className="w-full bg-fitness-primary hover:bg-fitness-secondary text-white font-medium hover-glow animate-bounce-custom"
             size="lg"
             onClick={onStart}
           >
-            <Play className="w-5 h-5 mr-2" />
-            Começar Treino
+            <Play className="w-4 h-4 mr-2" />
+            Iniciar Treino
           </Button>
         )}
       </CardContent>

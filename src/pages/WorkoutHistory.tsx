@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { Calendar, Clock, Dumbbell, Filter, Search, TrendingUp } from "lucide-react";
+import { Calendar, Clock, Dumbbell, Filter, Search, TrendingUp, Trophy } from "lucide-react";
 import { useCallback, useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 
@@ -255,105 +255,155 @@ const WorkoutHistory = () => {
       />
 
       <main className="container mx-auto px-4 py-8">
-        {/* Estatísticas */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card className="glass-card border-gray-800">
-            <CardContent className="p-6 text-center">
-              <Dumbbell className="w-8 h-8 text-fitness-primary mx-auto mb-3" />
-              <h4 className="text-2xl font-bold text-white mb-1">{historyStats.totalWorkouts}</h4>
-              <p className="text-gray-400 text-sm">Total de Treinos</p>
-            </CardContent>
-          </Card>
+        <div className="max-w-6xl mx-auto p-4">
+          <div className="mb-8 mt-6 animate-fade-in">
+            <h2 className="text-3xl font-bold text-white mb-2">Histórico de Treinos</h2>
+            <p className="text-gray-400">Acompanhe seu progresso e conquistas</p>
+          </div>
 
-          <Card className="glass-card border-gray-800">
-            <CardContent className="p-6 text-center">
-              <Clock className="w-8 h-8 text-fitness-primary mx-auto mb-3" />
-              <h4 className="text-2xl font-bold text-white mb-1">{formatDuration(historyStats.totalDuration)}</h4>
-              <p className="text-gray-400 text-sm">Tempo Total</p>
-              <p className="text-xs text-gray-500 mt-1">Média: {formatDuration(historyStats.averageDuration)}</p>
-            </CardContent>
-          </Card>
+          {/* Estatísticas */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+            <Card className="glass-card border-gray-800 card-entrance hover-lift">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-fitness-primary/20 rounded-lg flex items-center justify-center">
+                    <Calendar className="w-5 h-5 text-fitness-primary animate-pulse-custom" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-400 animate-slide-in-left">Total de Treinos</p>
+                    <p className="text-xl font-bold text-white animate-scale-in">{historyStats.totalWorkouts}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-          <Card className="glass-card border-gray-800">
-            <CardContent className="p-6 text-center">
-              <TrendingUp className="w-8 h-8 text-fitness-primary mx-auto mb-3" />
-              <h4 className="text-2xl font-bold text-white mb-1">{historyStats.completionRate}%</h4>
-              <p className="text-gray-400 text-sm">Taxa de Conclusão</p>
-            </CardContent>
-          </Card>
+            <Card className="glass-card border-gray-800 card-entrance hover-lift">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                    <Clock className="w-5 h-5 text-blue-400 animate-pulse-custom" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-400 animate-slide-in-left">Tempo Total</p>
+                    <p className="text-xl font-bold text-white animate-scale-in">{formatDuration(historyStats.totalDuration)}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-          <Card className="glass-card border-gray-800">
-            <CardContent className="p-6 text-center">
-              <Calendar className="w-8 h-8 text-fitness-primary mx-auto mb-3" />
-              <h4 className="text-2xl font-bold text-white mb-1">{historyStats.currentStreak}</h4>
-              <p className="text-gray-400 text-sm">Sequência Atual</p>
-              <p className="text-xs text-gray-500 mt-1">Recorde: {historyStats.longestStreak} dias</p>
-            </CardContent>
-          </Card>
-        </div>
+            <Card className="glass-card border-gray-800 card-entrance hover-lift">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
+                    <Clock className="w-5 h-5 text-green-400 animate-pulse-custom" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-400 animate-slide-in-left">Tempo Médio</p>
+                    <p className="text-xl font-bold text-white animate-scale-in">{formatDuration(historyStats.averageDuration)}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-        {/* Filtros */}
-        <Card className="glass-card border-gray-800 mb-6">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
-              <Filter className="w-5 h-5" />
-              Filtros
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <Input
-                  placeholder="Buscar treino..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 bg-gray-800 border-gray-700 text-white"
-                />
+            <Card className="glass-card border-gray-800 card-entrance hover-lift">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                    <TrendingUp className="w-5 h-5 text-purple-400 animate-pulse-custom" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-400 animate-slide-in-left">Taxa de Conclusão</p>
+                    <p className="text-xl font-bold text-white animate-scale-in">{historyStats.completionRate}%</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="glass-card border-gray-800 card-entrance hover-lift">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                    <Trophy className="w-5 h-5 text-orange-400 animate-pulse-custom" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-400 animate-slide-in-left">Sequência Atual</p>
+                    <p className="text-xl font-bold text-white animate-scale-in">{historyStats.currentStreak}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Filtros */}
+          <Card className="glass-card border-gray-800 mb-6 card-entrance hover-lift">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2 animate-slide-in-left">
+                <Filter className="w-5 h-5 text-fitness-primary animate-pulse-custom" />
+                Filtros
+              </CardTitle>
+            </CardHeader>
+                      <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="relative stagger-item">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <Input
+                    placeholder="Buscar treino..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 bg-gray-800 border-gray-700 text-white transition-all duration-300 focus:border-fitness-primary hover-glow"
+                  />
+                </div>
+
+                <Select value={dateFilter} onValueChange={setDateFilter}>
+                  <SelectTrigger className="bg-gray-800 border-gray-700 text-white transition-all duration-300 focus:border-fitness-primary hover-glow stagger-item">
+                    <SelectValue placeholder="Período" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-gray-800 border-gray-700 animate-scale-in">
+                    <SelectItem value="all" className="hover-scale">Todos os períodos</SelectItem>
+                    <SelectItem value="week" className="hover-scale">Última semana</SelectItem>
+                    <SelectItem value="month" className="hover-scale">Último mês</SelectItem>
+                    <SelectItem value="year" className="hover-scale">Último ano</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="bg-gray-800 border-gray-700 text-white transition-all duration-300 focus:border-fitness-primary hover-glow stagger-item">
+                    <SelectValue placeholder="Ordenar por" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-gray-800 border-gray-700 animate-scale-in">
+                    <SelectItem value="date_desc" className="hover-scale">Data (mais recente)</SelectItem>
+                    <SelectItem value="date_asc" className="hover-scale">Data (mais antigo)</SelectItem>
+                    <SelectItem value="duration_desc" className="hover-scale">Duração (maior)</SelectItem>
+                    <SelectItem value="duration_asc" className="hover-scale">Duração (menor)</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Button
+                  onClick={fetchWorkoutHistory}
+                  variant="outline"
+                  className="border-gray-700 text-gray-300 hover-glow btn-animate stagger-item"
+                  disabled={loadingHistory}
+                >
+                  {loadingHistory ? (
+                    <span className="loading-dots">
+                      <span></span>
+                      <span></span>
+                      <span></span>
+                    </span>
+                  ) : (
+                    'Atualizar'
+                  )}
+                </Button>
               </div>
+            </CardContent>
+          </Card>
 
-              <Select value={dateFilter} onValueChange={setDateFilter}>
-                <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
-                  <SelectValue placeholder="Período" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os períodos</SelectItem>
-                  <SelectItem value="week">Última semana</SelectItem>
-                  <SelectItem value="month">Último mês</SelectItem>
-                  <SelectItem value="year">Último ano</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
-                  <SelectValue placeholder="Ordenar por" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="date_desc">Data (mais recente)</SelectItem>
-                  <SelectItem value="date_asc">Data (mais antigo)</SelectItem>
-                  <SelectItem value="duration_desc">Duração (maior)</SelectItem>
-                  <SelectItem value="duration_asc">Duração (menor)</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Button
-                onClick={fetchWorkoutHistory}
-                variant="outline"
-                className="border-gray-700 text-gray-300"
-                disabled={loadingHistory}
-              >
-                {loadingHistory ? 'Carregando...' : 'Atualizar'}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Lista de Treinos */}
-        <div className="space-y-4">
+          {/* Lista de Treinos */}
+          <div className="space-y-4">
           {loadingHistory ? (
             // Loading skeleton
             Array.from({ length: 5 }).map((_, i) => (
-              <Card key={i} className="glass-card border-gray-800">
+              <Card key={i} className="glass-card border-gray-800 animate-shimmer">
                 <CardContent className="p-6">
                   <div className="animate-pulse">
                     <div className="h-6 bg-gray-700 rounded mb-3"></div>
@@ -368,11 +418,11 @@ const WorkoutHistory = () => {
               </Card>
             ))
           ) : filteredHistory.length === 0 ? (
-            <Card className="glass-card border-gray-800">
+            <Card className="glass-card border-gray-800 card-entrance">
               <CardContent className="p-12 text-center">
-                <Dumbbell className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-white mb-2">Nenhum treino encontrado</h3>
-                <p className="text-gray-400">
+                <Dumbbell className="w-16 h-16 text-gray-600 mx-auto mb-4 animate-pulse-custom" />
+                <h3 className="text-xl font-semibold text-white mb-2 animate-fade-in">Nenhum treino encontrado</h3>
+                <p className="text-gray-400 animate-slide-in-left">
                   {searchTerm || dateFilter !== 'all' 
                     ? 'Tente ajustar os filtros para ver mais resultados.'
                     : 'Você ainda não completou nenhum treino. Que tal começar agora?'
@@ -381,40 +431,41 @@ const WorkoutHistory = () => {
               </CardContent>
             </Card>
           ) : (
-            filteredHistory.map((workout) => (
-              <Card key={workout.id} className="glass-card border-gray-800 hover:border-fitness-primary/50 transition-colors">
+            filteredHistory.map((workout, index) => (
+              <Card key={workout.id} className="glass-card border-gray-800 hover:border-fitness-primary/50 transition-all duration-300 hover-lift card-entrance">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-xl font-semibold text-white">{workout.workout_name}</h3>
-                    <div className="text-sm text-gray-400">
+                    <h3 className="text-xl font-semibold text-white animate-slide-in-left hover-scale">{workout.workout_name}</h3>
+                    <div className="text-sm text-gray-400 animate-slide-in-right">
                       {formatDate(workout.workout_date)}
                     </div>
                   </div>
                   
                   <div className="flex items-center gap-6 text-sm text-gray-300">
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-fitness-primary" />
+                    <div className="flex items-center gap-2 stagger-item">
+                      <Clock className="w-4 h-4 text-fitness-primary animate-pulse-custom" />
                       <span>{formatDuration(workout.duration_minutes)}</span>
                     </div>
                     
-                    <div className="flex items-center gap-2">
-                      <Dumbbell className="w-4 h-4 text-fitness-primary" />
+                    <div className="flex items-center gap-2 stagger-item">
+                      <Dumbbell className="w-4 h-4 text-fitness-primary animate-pulse-custom" />
                       <span>{workout.exercises_completed}/{workout.total_exercises} exercícios</span>
                     </div>
                     
-                    <div className="flex items-center gap-2">
-                      <TrendingUp className="w-4 h-4 text-fitness-primary" />
+                    <div className="flex items-center gap-2 stagger-item">
+                      <TrendingUp className="w-4 h-4 text-fitness-primary animate-pulse-custom" />
                       <span>{Math.round((workout.exercises_completed / workout.total_exercises) * 100)}% concluído</span>
                     </div>
                   </div>
-
+                  
                   {/* Barra de progresso */}
                   <div className="mt-4">
-                    <div className="w-full bg-gray-700 rounded-full h-2">
+                    <div className="w-full bg-gray-800 rounded-full h-2">
                       <div 
-                        className="bg-fitness-primary h-2 rounded-full transition-all duration-300"
+                        className="bg-fitness-primary h-2 rounded-full transition-all duration-500 progress-animate"
                         style={{ 
-                          width: `${(workout.exercises_completed / workout.total_exercises) * 100}%` 
+                          width: `${(workout.exercises_completed / workout.total_exercises) * 100}%`,
+                          animationDelay: `${index * 0.1}s`
                         }}
                       ></div>
                     </div>
@@ -433,6 +484,7 @@ const WorkoutHistory = () => {
             </p>
           </div>
         )}
+        </div>
       </main>
     </div>
   );
