@@ -381,7 +381,7 @@ const WorkoutHistory = () => {
                 <Button
                   onClick={fetchWorkoutHistory}
                   variant="outline"
-                  className="border-gray-700 text-gray-300 hover-glow btn-animate stagger-item"
+                  className="border-gray-600 bg-transparent text-white hover:bg-gray-800 hover:text-white hover-glow btn-animate stagger-item"
                   disabled={loadingHistory}
                 >
                   {loadingHistory ? (

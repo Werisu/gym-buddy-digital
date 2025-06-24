@@ -76,13 +76,25 @@ export const Header = ({ title, subtitle, showBack, onBack }: HeaderProps) => {
               <Calendar className="w-4 h-4" />
               <span className="text-sm">Rotinas</span>
             </Link>
-            <Link to="/workout-history" className={getNavItemClass('/workout-history')}>
-              <History className="w-4 h-4" />
-              <span className="text-sm">Histórico</span>
+            <Link to="/workout-history">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-gray-200 hover:text-white hover:bg-gray-800 hover-scale btn-animate"
+              >
+                <History className="w-4 h-4 mr-2" />
+                Histórico
+              </Button>
             </Link>
-            <Link to="/profile" className={getNavItemClass('/profile')}>
-              <User className="w-4 h-4" />
-              <span className="text-sm">Perfil</span>
+            <Link to="/profile">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-gray-200 hover:text-white hover:bg-gray-800 hover-scale btn-animate"
+              >
+                <User className="w-4 h-4 mr-2" />
+                Perfil
+              </Button>
             </Link>
           </nav>
 
@@ -91,7 +103,7 @@ export const Header = ({ title, subtitle, showBack, onBack }: HeaderProps) => {
               variant="ghost"
               size="sm"
               onClick={handleSignOut}
-              className="text-gray-400 hover:text-red-400 hover-scale btn-animate"
+              className="text-gray-200 hover:text-red-400 hover:bg-gray-800 hover-scale btn-animate"
             >
               <LogOut className="w-4 h-4" />
             </Button>

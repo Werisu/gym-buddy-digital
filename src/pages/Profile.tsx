@@ -294,7 +294,7 @@ export default function Profile() {
                   variant="outline"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploading}
-                  className="border-gray-700 text-gray-300 hover:bg-gray-800 hover-glow btn-animate"
+                  className="border-gray-600 bg-transparent text-white hover:bg-gray-800 hover:text-white hover-glow btn-animate"
                 >
                   <Upload className="w-4 h-4 mr-2" />
                   {uploading ? (
@@ -307,7 +307,7 @@ export default function Profile() {
                     'Alterar Foto'
                   )}
                 </Button>
-                <p className="text-sm text-gray-500 mt-2 animate-fade-in">
+                <p className="text-sm text-gray-400 mt-2 animate-fade-in">
                   JPG, PNG ou GIF. Máximo 5MB.
                 </p>
               </div>

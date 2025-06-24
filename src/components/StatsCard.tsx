@@ -34,11 +34,11 @@ export const StatsCard = ({
         </div>
         
         <div className="space-y-2">
-          <h3 className="text-sm font-medium text-gray-400 animate-slide-in-left">{title}</h3>
+          <h3 className="text-sm font-medium text-gray-300 animate-slide-in-left">{title}</h3>
           <p className="text-2xl font-bold text-white animate-scale-in">{value}</p>
           
           {subtitle && (
-            <p className="text-xs text-gray-500 animate-slide-in-right">{subtitle}</p>
+            <p className="text-xs text-gray-400 animate-slide-in-right">{subtitle}</p>
           )}
           
           {trend && (

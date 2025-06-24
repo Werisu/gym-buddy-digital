@@ -430,7 +430,7 @@ const Index = () => {
                 </div>
               </div>
               <Link to="/workouts">
-                <Button variant="outline" className="w-full border-gray-700 text-gray-300 hover:bg-gray-800 hover-glow btn-animate">
+                <Button variant="outline" className="w-full border-gray-600 bg-transparent text-white hover:bg-gray-800 hover:text-white hover-glow btn-animate">
                   <Dumbbell className="w-4 h-4 mr-2" />
                   Ver Rotinas
                 </Button>
@@ -450,7 +450,7 @@ const Index = () => {
                 </div>
               </div>
               <Link to="/workout-history">
-                <Button variant="outline" className="w-full border-gray-700 text-gray-300 hover:bg-gray-800 hover-glow btn-animate">
+                <Button variant="outline" className="w-full border-gray-600 bg-transparent text-white hover:bg-gray-800 hover:text-white hover-glow btn-animate">
                   <History className="w-4 h-4 mr-2" />
                   Ver Histórico
                 </Button>
@@ -463,7 +463,7 @@ const Index = () => {
         <Card className="glass-card border-gray-800 mb-8 card-entrance hover-lift">
           <CardHeader>
             <CardTitle className="text-white flex items-center gap-2 animate-slide-in-left">
-              <Trophy className="w-5 h-5 text-fitness-primary animate-pulse-custom" />
+              <Trophy classNtext-gray-300ame="w-5 h-5 text-fitness-primary animate-pulse-custom" />
               Microanimações Implementadas ✨
             </CardTitle>
             <CardDescription className="text-gray-400 animate-slide-in-right">
